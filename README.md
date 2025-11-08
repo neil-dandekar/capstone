@@ -1,6 +1,6 @@
-Disclaimer: My partner and I changed our capstone project this week (week 6). So far, we've done literature review and cloned/set up the code from the authors: [repo](https://github.com/Trustworthy-ML-Lab/CB-LLMs), [paper](https://arxiv.org/abs/2412.07992), and [[project website](https://lilywenglab.github.io/CB-LLMs/)].
+**Disclaimer:** My partner and I changed our capstone project this week (week 6). So far, we've done literature review and cloned/set up the code from the authors: [repo](https://github.com/Trustworthy-ML-Lab/CB-LLMs), [paper](https://arxiv.org/abs/2412.07992), and [[project website](https://lilywenglab.github.io/CB-LLMs/)].
 
-You can find our progress in checkpoint.ipynb where we used the finetuned model checkpoints provided by the authors on HuggingFace to replicate Tables 2 and 5 in the paper. To set up the repository, read the README.md provided by the authors below:
+**You can find our progress in [checkpoint.ipynb](/checkpoint.ipynb)** where we used the finetuned model checkpoints provided by the authors on HuggingFace to replicate Tables 2 and 5 in the paper. To set up the repository, read the README.md provided by the authors below:
 
 # Concept Bottleneck Large Language Models
 
