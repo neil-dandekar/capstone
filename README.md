@@ -1,7 +1,29 @@
+# Reproducing and Extending Concept Bottleneck Large Language Models for Faithful Interpretability
+
+**Neil Dandekar & Christian Guerra**
+
+This repository contains an implementation of a full-stack interface for users to perturb concept-neurons to increase accuracy and steerability of LLMs for text classification and generation tasks. Our project is largely based on the work of Chung-En Sun, Tuomas Oikarinen, Berk Ustun, and Tsui-Wei Weng. "_Concept Bottleneck Large Language Models_". ICLR, 2025. Scroll down to "Concept Bottleneck Large Language Models" for more information on the original authors' work. Our code is a fork of their repository and the full-stack interface is on its way.
+
+```
+@article{cbllm,
+   title={Concept Bottleneck Large Language Models},
+   author={Sun, Chung-En and Oikarinen, Tuomas and Ustun, Berk and Weng, Tsui-Wei},
+   journal={ICLR},
+   year={2025}
+}
+```
+
+## Setup
+
+Our code for Quarter 1 is self-contained in [checkpoint.ipynb](/checkpoint.ipynb), which requires no setup. Run all code and it will create the environments, install all dependencies, and reproduce each table from the paper. We used the finetuned model checkpoints provided by the authors on HuggingFace to replicate Tables 2 and 5 in the paper. To set up the repository, read the README.md provided by the authors below:
+
+[Scroll](#main)
+
+
 **Disclaimer:** My partner and I changed our capstone project this week (week 6). So far, we've done literature review and cloned/set up the code from the authors: [repo](https://github.com/Trustworthy-ML-Lab/CB-LLMs), [paper](https://arxiv.org/abs/2412.07992), and [[project website](https://lilywenglab.github.io/CB-LLMs/)].
 
-**You can find our progress in [checkpoint.ipynb](/checkpoint.ipynb)** where we used the finetuned model checkpoints provided by the authors on HuggingFace to replicate Tables 2 and 5 in the paper. To set up the repository, read the README.md provided by the authors below:
 
+<a id="main"></a>
 # Concept Bottleneck Large Language Models
 
 01/22 update: CB-LLMs is accepted by ICLR2025!
