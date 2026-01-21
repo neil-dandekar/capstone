@@ -1,0 +1,9 @@
+{
+  "alphas": [0.0, 0.25, 0.5, 0.75, 1.0],
+  "accuracy": [0.92, 0.90, 0.86, 0.80, 0.72],
+  "steering": [0.10, 0.28, 0.45, 0.61, 0.78],
+  "examples": {
+    "0.0": {"before":"The movie was good.", "after":"The movie was good."},
+    "0.5": {"before":"The movie was good.", "after":"The movie was absolutely fantastic."}
+  }
+}
