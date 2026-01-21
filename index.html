@@ -3,41 +3,604 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Capstone Project</title>
+    <title>Capstone Project | Neuron Intervention Demo</title>
+    <meta
+      name="description"
+      content="Interactive capstone demo: neuron-level interventions in Concept Bottleneck LLMs with accuracy vs steerability tradeoffs."
+    />
 
+    <!-- If your repo file is named style.css, keep this exactly as-is -->
     <link rel="stylesheet" href="style.css" />
-    <!-- Only include this if you actually have script.js -->
-    <!-- <script defer src="script.js"></script> -->
+
+    <!-- Chart.js for simple in-browser plots (works on GitHub Pages) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+      /* Safe defaults in case your style.css is empty */
+      :root {
+        --bg: #0b0f17;
+        --card: #121a29;
+        --text: #e7eefc;
+        --muted: #a9b6d3;
+        --border: rgba(255, 255, 255, 0.10);
+        --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        --radius: 16px;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        background: radial-gradient(1200px 800px at 15% 10%, rgba(99, 102, 241, 0.20), transparent 60%),
+                    radial-gradient(900px 700px at 85% 20%, rgba(34, 197, 94, 0.14), transparent 55%),
+                    var(--bg);
+        color: var(--text);
+      }
+
+      a { color: inherit; }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+
+      header {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        margin: 0;
+        letter-spacing: -0.02em;
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.1;
+      }
+
+      .sub {
+        margin: 0;
+        color: var(--muted);
+        max-width: 70ch;
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 16px;
+        align-items: start;
+      }
+
+      @media (max-width: 900px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+
+      .card {
+        background: rgba(18, 26, 41, 0.82);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        backdrop-filter: blur(10px);
+      }
+
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 18px;
+        letter-spacing: -0.01em;
+      }
+
+      .card p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 14.5px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      @media (max-width: 650px) {
+        .row { grid-template-columns: 1fr; }
+      }
+
+      label {
+        display: block;
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      select, input[type="range"] {
+        width: 100%;
+      }
+
+      select {
+        background: rgba(255,255,255,0.06);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        outline: none;
+      }
+
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      @media (max-width: 520px) {
+        .kpis { grid-template-columns: 1fr; }
+      }
+
+      .kpi {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(255,255,255,0.04);
+      }
+
+      .kpi .name {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+
+      .kpi .val {
+        font-size: 18px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+
+      .pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 7px 10px;
+        background: rgba(255,255,255,0.04);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .pill b { color: var(--text); font-weight: 650; }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+      }
+
+      .sliderline {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      }
+
+      .examples {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .ex {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(255,255,255,0.04);
+      }
+
+      .ex .hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .ex .hdr .tag {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .ex .txt {
+        margin: 0;
+        line-height: 1.55;
+        font-size: 14px;
+        color: var(--text);
+      }
+
+      .footlinks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        padding: 9px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 13px;
+        color: var(--text);
+      }
+
+      .hint {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      canvas { width: 100% !important; height: 320px !important; }
+    </style>
   </head>
 
   <body>
     <div class="wrap">
-      <h1>Your Capstone Title</h1>
-      <p class="sub">One-sentence description of what you built and why it matters.</p>
+      <header>
+        <div class="pill">
+          Interactive demo: <b>precomputed</b> results on GitHub Pages
+          <span class="mono" style="opacity:0.7;">(no server required)</span>
+        </div>
 
-      <div class="card">
-        <h2>Overview</h2>
-        <p>Add a short paragraph describing the problem, approach, and outcome.</p>
+        <h1>Neuron-Level Interventions in Concept Bottleneck LLMs</h1>
+        <p class="sub">
+          This capstone studies how intervening on concept-linked neurons impacts downstream
+          classification accuracy and steerability. Use the controls to explore the tradeoff.
+          Results shown here are precomputed and loaded as static JSON.
+        </p>
+      </header>
+
+      <div class="grid">
+        <!-- LEFT: chart + explanation -->
+        <section class="card">
+          <h2>Tradeoff Visualization</h2>
+          <p>
+            The chart updates based on dataset, intervention type, and strength. In a full system,
+            the same controls can call a hosted inference API, but this GitHub Pages demo uses
+            precomputed results for reliability and reproducibility.
+          </p>
+
+          <div style="margin-top: 14px;">
+            <canvas id="tradeoffChart" aria-label="Steerability vs Accuracy chart"></canvas>
+          </div>
+
+          <p class="hint">
+            Tip: If you haven’t added your real metrics yet, the site will use the included
+            sample metrics. Replace <span class="mono">results/metrics.json</span> with your own data.
+          </p>
+
+          <div class="footlinks">
+            <a class="btn" href="https://github.com/chguerra15/capstone-site" target="_blank" rel="noreferrer">Website Repo</a>
+            <a class="btn" href="#" id="codeRepoLink" target="_blank" rel="noreferrer">Code Repo (set link)</a>
+            <a class="btn" href="results/metrics.json" target="_blank" rel="noreferrer">Metrics JSON</a>
+          </div>
+        </section>
+
+        <!-- RIGHT: controls + KPIs + examples -->
+        <aside class="card">
+          <h2>Controls</h2>
+
+          <div class="controls">
+            <div class="row">
+              <div>
+                <label for="dataset">Dataset</label>
+                <select id="dataset"></select>
+              </div>
+              <div>
+                <label for="intervention">Intervention</label>
+                <select id="intervention"></select>
+              </div>
+            </div>
+
+            <div>
+              <label for="alpha">
+                Intervention strength (α) — <span class="mono" id="alphaVal">0.50</span>
+              </label>
+              <div class="sliderline">
+                <input id="alpha" type="range" min="0" max="1" step="0.05" value="0.5" />
+                <span class="pill"><span>snap:</span> <b class="mono" id="alphaSnap">0.50</b></span>
+              </div>
+            </div>
+
+            <div class="kpis">
+              <div class="kpi">
+                <div class="name">Accuracy</div>
+                <div class="val" id="kpiAcc">—</div>
+              </div>
+              <div class="kpi">
+                <div class="name">Steering score</div>
+                <div class="val" id="kpiSteer">—</div>
+              </div>
+              <div class="kpi">
+                <div class="name">Δ Accuracy</div>
+                <div class="val" id="kpiDelta">—</div>
+              </div>
+            </div>
+
+            <div class="examples">
+              <div class="ex">
+                <div class="hdr">
+                  <div class="tag">Prompt</div>
+                </div>
+                <p class="txt mono" id="exPrompt">—</p>
+              </div>
+
+              <div class="ex">
+                <div class="hdr">
+                  <div class="tag">Baseline output</div>
+                  <div class="tag mono">α = 0.00</div>
+                </div>
+                <p class="txt" id="exBefore">—</p>
+              </div>
+
+              <div class="ex">
+                <div class="hdr">
+                  <div class="tag">After intervention</div>
+                  <div class="tag mono">α = <span id="exAlpha">0.50</span></div>
+                </div>
+                <p class="txt" id="exAfter">—</p>
+              </div>
+            </div>
+          </div>
+
+          <p class="hint">
+            To plug in your real capstone results, export a grid of α values for each dataset + intervention,
+            then write them into <span class="mono">results/metrics.json</span>. No backend required.
+          </p>
+        </aside>
       </div>
 
-      <div class="card">
-        <h2>Links</h2>
-        <ul>
-          <li>
-            <a href="https://github.com/chguerra15/capstone-site">
-              GitHub Repo
-            </a>
-          </li>
-        </ul>
-      </div>
+      <section class="card" style="margin-top: 16px;">
+        <h2>Project Summary</h2>
+        <p>
+          We reproduce and extend Concept Bottleneck LLM work by building tooling to select concept-linked
+          neurons and apply activation interventions (ablation / amplification) while measuring downstream
+          performance and behavioral steering. This website presents a reproducible interactive view of the
+          measured tradeoffs.
+        </p>
 
-      <div class="card">
-        <h2>Team</h2>
-        <ul>
-          <li>Christian Guerra</li>
-          <li>Neil Dandekar</li>
-        </ul>
-      </div>
+        <h2 style="margin-top: 14px;">Team</h2>
+        <p>Christian Guerra, Neil Dandekar</p>
+      </section>
     </div>
+
+    <script>
+      /**
+       * GitHub Pages demo notes:
+       * - This page loads precomputed metrics from results/metrics.json
+       * - If that file doesn't exist yet, it falls back to SAMPLE_DATA.
+       * - Replace SAMPLE_DATA with your real metrics by creating results/metrics.json in this repo.
+       */
+
+      // Set your partner/capstone code repo link here (optional)
+      const CODE_REPO_URL = "https://github.com/neil-dandekar/capstone";
+
+      const SAMPLE_DATA = {
+        meta: {
+          code_repo: CODE_REPO_URL,
+          updated: "sample"
+        },
+        datasets: [
+          {
+            id: "sst2",
+            name: "SST-2 (sample)",
+            interventions: [
+              {
+                id: "ablate_topk",
+                name: "Ablate top-k concept neurons",
+                alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
+                accuracy: [0.92, 0.90, 0.86, 0.80, 0.72],
+                steering: [0.10, 0.28, 0.45, 0.61, 0.78],
+                prompt: "The movie was surprisingly...",
+                examples: {
+                  "0.0": {
+                    before: "The movie was surprisingly engaging with strong performances.",
+                    after: "The movie was surprisingly engaging with strong performances."
+                  },
+                  "0.5": {
+                    before: "The movie was surprisingly engaging with strong performances.",
+                    after: "The movie was surprisingly uplifting, emotionally powerful, and deeply satisfying."
+                  },
+                  "1.0": {
+                    before: "The movie was surprisingly engaging with strong performances.",
+                    after: "The movie was surprisingly flawless, unforgettable, and one of the best films in years."
+                  }
+                }
+              },
+              {
+                id: "boost_concept",
+                name: "Boost a target concept direction",
+                alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
+                accuracy: [0.92, 0.91, 0.88, 0.83, 0.77],
+                steering: [0.10, 0.22, 0.38, 0.54, 0.69],
+                prompt: "Write a short review about the film.",
+                examples: {
+                  "0.0": {
+                    before: "A solid film with a few standout moments.",
+                    after: "A solid film with a few standout moments."
+                  },
+                  "0.5": {
+                    before: "A solid film with a few standout moments.",
+                    after: "A remarkably positive film with heartfelt moments and strong acting."
+                  },
+                  "1.0": {
+                    before: "A solid film with a few standout moments.",
+                    after: "An exceptionally uplifting masterpiece that delivers joy from start to finish."
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      let DATA = null;
+      let chart = null;
+
+      function $(id) { return document.getElementById(id); }
+
+      function nearestIndex(arr, x) {
+        let best = 0;
+        let bestDist = Infinity;
+        for (let i = 0; i < arr.length; i++) {
+          const d = Math.abs(arr[i] - x);
+          if (d < bestDist) { bestDist = d; best = i; }
+        }
+        return best;
+      }
+
+      function setSelectOptions(selectEl, options, getValue, getLabel) {
+        selectEl.innerHTML = "";
+        for (const opt of options) {
+          const o = document.createElement("option");
+          o.value = getValue(opt);
+          o.textContent = getLabel(opt);
+          selectEl.appendChild(o);
+        }
+      }
+
+      function getCurrent() {
+        const dsId = $("dataset").value;
+        const intId = $("intervention").value;
+        const ds = DATA.datasets.find(d => d.id === dsId) || DATA.datasets[0];
+        const intervention = ds.interventions.find(i => i.id === intId) || ds.interventions[0];
+        return { ds, intervention };
+      }
+
+      function buildChart() {
+        const ctx = $("tradeoffChart");
+        const { intervention } = getCurrent();
+
+        const points = intervention.alphas.map((a, i) => ({
+          x: intervention.steering[i],
+          y: intervention.accuracy[i],
+          alpha: a
+        }));
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+          type: "line",
+          data: {
+            datasets: [{
+              label: "Steerability vs Accuracy",
+              data: points,
+              parsing: false,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              tension: 0.25
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true },
+              tooltip: {
+                callbacks: {
+                  label: (c) => {
+                    const p = c.raw;
+                    const acc = (p.y * 100).toFixed(1) + "%";
+                    return `α=${p.alpha.toFixed(2)} | steering=${p.x.toFixed(2)} | acc=${acc}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { title: { display: true, text: "Steering score" } },
+              y: { title: { display: true, text: "Accuracy" } }
+            }
+          }
+        });
+      }
+
+      function updateUI() {
+        const { intervention } = getCurrent();
+
+        const alpha = parseFloat($("alpha").value);
+        $("alphaVal").textContent = alpha.toFixed(2);
+
+        const i = nearestIndex(intervention.alphas, alpha);
+        const snapAlpha = intervention.alphas[i];
+        $("alphaSnap").textContent = snapAlpha.toFixed(2);
+        $("exAlpha").textContent = snapAlpha.toFixed(2);
+
+        const acc = intervention.accuracy[i];
+        const steer = intervention.steering[i];
+
+        $("kpiAcc").textContent = (acc * 100).toFixed(1) + "%";
+        $("kpiSteer").textContent = steer.toFixed(2);
+
+        // Δ accuracy vs baseline alpha=0 (assumes alphas includes 0.0)
+        const baseIdx = nearestIndex(intervention.alphas, 0.0);
+        const baseAcc = intervention.accuracy[baseIdx];
+        const delta = (acc - baseAcc) * 100;
+        const sign = delta >= 0 ? "+" : "";
+        $("kpiDelta").textContent = `${sign}${delta.toFixed(1)} pts`;
+
+        $("exPrompt").textContent = intervention.prompt || "—";
+
+        // Examples: use exact snapAlpha key if present, else use baseline
+        const key = String(snapAlpha);
+        const ex = (intervention.examples && (intervention.examples[key] || intervention.examples[key.replace(".0","")])) || null;
+
+        const baselineKey = String(intervention.alphas[baseIdx]);
+        const baselineEx = (intervention.examples && (intervention.examples[baselineKey] || intervention.examples[baselineKey.replace(".0","")])) || null;
+
+        if (baselineEx) $("exBefore").textContent = baselineEx.before || "—";
+        if (ex) $("exAfter").textContent = ex.after || "—";
+      }
+
+      function onDatasetChange() {
+        const dsId = $("dataset").value;
+        const ds = DATA.datasets.find(d => d.id === dsId) || DATA.datasets[0];
+        setSelectOptions($("intervention"), ds.interventions, i => i.id, i => i.name);
+        buildChart();
+        updateUI();
+      }
+
+      async function loadData() {
+        $("codeRepoLink").href = CODE_REPO_URL;
+
+        try {
+          const res = await fetch("results/metrics.json", { cache: "no-store" });
+          if (!res.ok) throw new Error("metrics.json not found");
+          DATA = await res.json();
+        } catch {
+          DATA = SAMPLE_DATA;
+        }
+
+        // Use meta link if provided
+        if (DATA.meta && DATA.meta.code_repo) {
+          $("codeRepoLink").href = DATA.meta.code_repo;
+        }
+
+        setSelectOptions($("dataset"), DATA.datasets, d => d.id, d => d.name);
+        onDatasetChange();
+
+        $("dataset").addEventListener("change", onDatasetChange);
+        $("intervention").addEventListener("change", () => { buildChart(); updateUI(); });
+        $("alpha").addEventListener("input", updateUI);
+      }
+
+      loadData();
+    </script>
   </body>
 </html>
+
