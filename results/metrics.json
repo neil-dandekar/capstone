@@ -1,56 +1,182 @@
 {
-  "id": "ag_news",
-  "name": "AG News",
-  "tasks": [
+  "meta": {
+    "code_repo": "https://github.com/neil-dandekar/capstone",
+    "updated": "2026-01-25"
+  },
+
+  "datasets": [
+
+    /* =========================
+       DATASET 1 — SST-2
+       ========================= */
     {
-      "id": "classification",
-      "name": "Classification",
-      "primary_metric": { "id": "accuracy", "name": "Accuracy", "format": "pct" },
-      "interventions": [
+      "id": "sst2",
+      "name": "SST-2",
+
+      "tasks": [
+
+        /* ---------- CLASSIFICATION TASK ---------- */
         {
-          "id": "ablate_topk",
-          "name": "Ablate top-k concept neurons",
-          "alphas": [0.0, 0.25, 0.5, 0.75, 1.0],
-          "accuracy": [0.88, 0.86, 0.83, 0.78, 0.72],
-          "steering": [0.08, 0.22, 0.39, 0.55, 0.67],
-          "prompt": "Classify this news headline: \"...\"",
-          "examples": {
-            "0":   { "before": "Pred: World", "after": "Pred: World" },
-            "0.5": { "before": "Pred: World", "after": "Pred: Business" },
-            "1":   { "before": "Pred: World", "after": "Pred: Sci/Tech" }
+          "id": "classification",
+          "name": "Classification",
+          "primary_metric": {
+            "id": "accuracy",
+            "name": "Accuracy",
+            "format": "pct"
           },
-          "top_concepts_by_class": {
-            "0.5": {
-              "World": [
-                { "name": "geopolitics", "score": 0.81 },
-                { "name": "conflict", "score": 0.73 },
-                { "name": "diplomacy", "score": 0.62 },
-                { "name": "international", "score": 0.58 },
-                { "name": "security", "score": 0.52 }
-              ],
-              "Sports": [
-                { "name": "game outcome", "score": 0.77 },
-                { "name": "team performance", "score": 0.69 },
-                { "name": "season", "score": 0.60 },
-                { "name": "player stats", "score": 0.56 },
-                { "name": "match", "score": 0.49 }
-              ],
-              "Business": [
-                { "name": "market movement", "score": 0.74 },
-                { "name": "earnings", "score": 0.66 },
-                { "name": "stocks", "score": 0.61 },
-                { "name": "revenue", "score": 0.53 },
-                { "name": "trade", "score": 0.47 }
-              ],
-              "Sci/Tech": [
-                { "name": "innovation", "score": 0.79 },
-                { "name": "research", "score": 0.70 },
-                { "name": "software", "score": 0.59 },
-                { "name": "AI", "score": 0.55 },
-                { "name": "devices", "score": 0.48 }
-              ]
+
+          "interventions": [
+            {
+              "id": "ablate_topk",
+              "name": "Ablate top-k concept neurons",
+
+              "alphas":    [0.0, 0.25, 0.5, 0.75, 1.0],
+              "accuracy":  [0.92, 0.90, 0.86, 0.80, 0.72],
+              "steering":  [0.10, 0.28, 0.45, 0.61, 0.78],
+
+              "prompt": "The movie was surprisingly...",
+
+              "examples": {
+                "0":   { "before": "The movie was surprisingly engaging with strong performances.", "after": "The movie was surprisingly engaging with strong performances." },
+                "0.5": { "before": "The movie was surprisingly engaging with strong performances.", "after": "The movie was surprisingly uplifting and emotionally powerful." },
+                "1":   { "before": "The movie was surprisingly engaging with strong performances.", "after": "The movie was surprisingly flawless and unforgettable." }
+              },
+
+              "top_concepts_by_class": {
+                "0.5": {
+                  "positive": [
+                    { "name": "uplifting", "score": 0.82 },
+                    { "name": "heartfelt", "score": 0.74 },
+                    { "name": "emotional", "score": 0.66 },
+                    { "name": "excellent acting", "score": 0.61 },
+                    { "name": "satisfying", "score": 0.58 }
+                  ],
+                  "negative": [
+                    { "name": "boring", "score": 0.23 },
+                    { "name": "predictable", "score": 0.20 },
+                    { "name": "flat", "score": 0.18 },
+                    { "name": "slow", "score": 0.15 },
+                    { "name": "forgettable", "score": 0.13 }
+                  ]
+                }
+              }
             }
-          }
+          ]
+        },
+
+        /* ---------- GENERATION TASK ---------- */
+        {
+          "id": "generation",
+          "name": "CB-LLM Generation",
+          "primary_metric": {
+            "id": "quality",
+            "name": "Generation quality",
+            "format": "num2"
+          },
+
+          "interventions": [
+            {
+              "id": "boost_concept",
+              "name": "Boost positive sentiment direction",
+
+              "alphas":   [0.0, 0.25, 0.5, 0.75, 1.0],
+              "quality":  [0.61, 0.66, 0.71, 0.74, 0.73],
+              "steering": [0.12, 0.30, 0.49, 0.64, 0.76],
+
+              "prompt": "Write a short upbeat movie review.",
+
+              "examples": {
+                "0":   { "before": "A solid film with a few standout moments.", "after": "A solid film with a few standout moments." },
+                "0.5": { "before": "A solid film with a few standout moments.", "after": "A genuinely uplifting film with strong emotion and memorable scenes." },
+                "1":   { "before": "A solid film with a few standout moments.", "after": "An exuberant, feel-good gem that’s emotionally resonant." }
+              },
+
+              "top_concepts_by_class": {
+                "0.5": {
+                  "upbeat": [
+                    { "name": "positive sentiment", "score": 0.88 },
+                    { "name": "enthusiastic tone", "score": 0.81 },
+                    { "name": "warmth", "score": 0.69 },
+                    { "name": "optimism", "score": 0.60 },
+                    { "name": "praise", "score": 0.55 }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+
+    /* =========================
+       DATASET 2 — AG NEWS
+       ========================= */
+    {
+      "id": "ag_news",
+      "name": "AG News",
+
+      "tasks": [
+        {
+          "id": "classification",
+          "name": "Classification",
+          "primary_metric": {
+            "id": "accuracy",
+            "name": "Accuracy",
+            "format": "pct"
+          },
+
+          "interventions": [
+            {
+              "id": "ablate_topk",
+              "name": "Ablate top-k concept neurons",
+
+              "alphas":   [0.0, 0.25, 0.5, 0.75, 1.0],
+              "accuracy": [0.88, 0.86, 0.83, 0.78, 0.72],
+              "steering": [0.08, 0.22, 0.39, 0.55, 0.67],
+
+              "prompt": "Classify this news headline: \"Global markets rally after policy shift\"",
+
+              "examples": {
+                "0":   { "before": "Pred: Business", "after": "Pred: Business" },
+                "0.5": { "before": "Pred: Business", "after": "Pred: World" },
+                "1":   { "before": "Pred: Business", "after": "Pred: Sci/Tech" }
+              },
+
+              "top_concepts_by_class": {
+                "0.5": {
+                  "World": [
+                    { "name": "geopolitics", "score": 0.81 },
+                    { "name": "conflict", "score": 0.73 },
+                    { "name": "diplomacy", "score": 0.64 },
+                    { "name": "international", "score": 0.59 },
+                    { "name": "security", "score": 0.53 }
+                  ],
+                  "Sports": [
+                    { "name": "game outcome", "score": 0.77 },
+                    { "name": "team performance", "score": 0.69 },
+                    { "name": "season", "score": 0.61 },
+                    { "name": "player stats", "score": 0.55 },
+                    { "name": "match", "score": 0.49 }
+                  ],
+                  "Business": [
+                    { "name": "market movement", "score": 0.74 },
+                    { "name": "earnings", "score": 0.66 },
+                    { "name": "stocks", "score": 0.60 },
+                    { "name": "revenue", "score": 0.54 },
+                    { "name": "trade", "score": 0.48 }
+                  ],
+                  "Sci/Tech": [
+                    { "name": "innovation", "score": 0.79 },
+                    { "name": "research", "score": 0.70 },
+                    { "name": "software", "score": 0.62 },
+                    { "name": "AI", "score": 0.56 },
+                    { "name": "devices", "score": 0.50 }
+                  ]
+                }
+              }
+            }
+          ]
         }
       ]
     }
