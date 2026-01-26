@@ -9,14 +9,10 @@
       content="Interactive capstone demo: neuron-level interventions in Concept Bottleneck LLMs with accuracy vs steerability tradeoffs."
     />
 
-    <!-- If your repo file is named style.css, keep this exactly as-is -->
     <link rel="stylesheet" href="style.css" />
-
-    <!-- Chart.js for simple in-browser plots (works on GitHub Pages) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <style>
-      /* Safe defaults in case your style.css is empty */
       :root {
         --bg: #0b0f17;
         --card: #121a29;
@@ -25,6 +21,8 @@
         --border: rgba(255, 255, 255, 0.10);
         --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
         --radius: 16px;
+        --danger: #ff6b6b;
+        --ok: #6ee7b7;
       }
 
       body {
@@ -39,29 +37,26 @@
       a { color: inherit; }
 
       .wrap {
-        max-width: 1100px;
+        max-width: 1180px;
         margin: 0 auto;
         padding: 48px 20px 80px;
       }
 
-      header {
-        display: grid;
-        gap: 10px;
-        margin-bottom: 22px;
-      }
+      header { display: grid; gap: 10px; margin-bottom: 22px; }
 
       h1 {
         margin: 0;
         letter-spacing: -0.02em;
-        font-size: clamp(28px, 4vw, 44px);
+        font-size: clamp(30px, 4vw, 46px);
         line-height: 1.1;
       }
 
       .sub {
         margin: 0;
         color: var(--muted);
-        max-width: 70ch;
-        font-size: 16px;
+        max-width: 80ch;
+        font-size: 16.5px;
+        line-height: 1.55;
       }
 
       .grid {
@@ -86,7 +81,7 @@
 
       .card h2 {
         margin: 0 0 10px;
-        font-size: 18px;
+        font-size: 20px;
         letter-spacing: -0.01em;
       }
 
@@ -94,7 +89,7 @@
         margin: 10px 0 0;
         color: var(--muted);
         line-height: 1.6;
-        font-size: 14.5px;
+        font-size: 15px;
       }
 
       .row {
@@ -109,22 +104,21 @@
 
       label {
         display: block;
-        font-size: 12.5px;
+        font-size: 13.5px;
         color: var(--muted);
         margin-bottom: 6px;
       }
 
-      select, input[type="range"] {
-        width: 100%;
-      }
+      select, input[type="range"] { width: 100%; }
 
       select {
         background: rgba(255,255,255,0.06);
         color: var(--text);
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 10px 12px;
+        padding: 11px 12px;
         outline: none;
+        font-size: 15px;
       }
 
       .kpis {
@@ -147,13 +141,13 @@
 
       .kpi .name {
         color: var(--muted);
-        font-size: 12px;
+        font-size: 13px;
         margin-bottom: 6px;
       }
 
       .kpi .val {
-        font-size: 18px;
-        font-weight: 650;
+        font-size: 22px; /* larger KPI */
+        font-weight: 700;
         letter-spacing: -0.01em;
       }
 
@@ -166,15 +160,12 @@
         padding: 7px 10px;
         background: rgba(255,255,255,0.04);
         color: var(--muted);
-        font-size: 12px;
+        font-size: 12.5px;
       }
 
-      .pill b { color: var(--text); font-weight: 650; }
+      .pill b { color: var(--text); font-weight: 700; }
 
-      .controls {
-        display: grid;
-        gap: 12px;
-      }
+      .controls { display: grid; gap: 12px; }
 
       .sliderline {
         display: grid;
@@ -210,13 +201,13 @@
 
       .ex .hdr .tag {
         color: var(--muted);
-        font-size: 12px;
+        font-size: 13px;
       }
 
       .ex .txt {
         margin: 0;
         line-height: 1.55;
-        font-size: 14px;
+        font-size: 15px; /* larger examples */
         color: var(--text);
       }
 
@@ -236,17 +227,129 @@
         padding: 9px 12px;
         border-radius: 12px;
         text-decoration: none;
-        font-size: 13px;
+        font-size: 13.5px;
         color: var(--text);
       }
 
-      .hint {
+      .hint { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+
+      canvas { width: 100% !important; height: 340px !important; }
+
+      /* Status line for whether metrics.json loaded */
+      .statusline {
         margin-top: 10px;
-        font-size: 12px;
+        font-size: 13px;
         color: var(--muted);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        display: inline-block;
+        background: rgba(255,255,255,0.25);
+      }
+      .dot.ok { background: var(--ok); }
+      .dot.bad { background: var(--danger); }
+
+      /* ===== Top concepts panel (bigger fonts per your TODO) ===== */
+      .conceptsPanel {
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(255,255,255,0.04);
       }
 
-      canvas { width: 100% !important; height: 320px !important; }
+      .conceptsHdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .conceptsHdr .title {
+        font-size: 18px;
+        font-weight: 750;
+        letter-spacing: -0.01em;
+      }
+
+      .conceptsHdr .note {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .classBlock {
+        padding: 10px 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(0,0,0,0.10);
+        margin-top: 10px;
+      }
+
+      .className {
+        font-size: 18px; /* larger class name */
+        font-weight: 800;
+        margin: 0 0 10px;
+        letter-spacing: -0.01em;
+      }
+
+      .barRow {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin: 8px 0;
+      }
+
+      .barTrack {
+        position: relative;
+        height: 16px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.05);
+        overflow: hidden;
+      }
+
+      .barFill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0%;
+        background: rgba(99, 102, 241, 0.55);
+      }
+
+      .barLabel {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        font-size: 15px; /* larger concept name */
+        font-weight: 650;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: calc(100% - 12px);
+        color: var(--text);
+      }
+
+      .barVal {
+        font-size: 14px;
+        color: var(--muted);
+        min-width: 72px;
+        text-align: right;
+      }
+
+      .emptyMsg {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 8px;
+      }
     </style>
   </head>
 
@@ -260,39 +363,41 @@
 
         <h1>Neuron-Level Interventions in Concept Bottleneck LLMs</h1>
         <p class="sub">
-          This capstone studies how intervening on concept-linked neurons impacts downstream
-          classification accuracy and steerability. Use the controls to explore the tradeoff.
-          Results shown here are precomputed and loaded as static JSON.
+          Explore how intervening on concept-linked neurons impacts downstream task performance
+          and steering. This static site reads precomputed JSON so it runs on GitHub Pages.
         </p>
       </header>
 
       <div class="grid">
-        <!-- LEFT: chart + explanation -->
+        <!-- LEFT -->
         <section class="card">
           <h2>Tradeoff Visualization</h2>
           <p>
-            The chart updates based on dataset, intervention type, and strength. In a full system,
-            the same controls can call a hosted inference API, but this GitHub Pages demo uses
-            precomputed results for reliability and reproducibility.
+            The chart updates based on dataset, task, intervention, and strength.
           </p>
 
           <div style="margin-top: 14px;">
             <canvas id="tradeoffChart" aria-label="Steerability vs Accuracy chart"></canvas>
           </div>
 
+          <div class="statusline">
+            <span class="dot" id="dataDot"></span>
+            <span id="dataStatus">Loading…</span>
+            <span class="mono" id="dataSource" style="opacity:0.8;"></span>
+          </div>
+
           <p class="hint">
-            Tip: If you haven’t added your real metrics yet, the site will use the included
-            sample metrics. Replace <span class="mono">results/metrics.json</span> with your own data.
+            Replace <span class="mono">results/metrics.json</span> with your exported results.
           </p>
 
           <div class="footlinks">
             <a class="btn" href="https://github.com/chguerra15/capstone-site" target="_blank" rel="noreferrer">Website Repo</a>
-            <a class="btn" href="#" id="codeRepoLink" target="_blank" rel="noreferrer">Code Repo (set link)</a>
+            <a class="btn" href="#" id="codeRepoLink" target="_blank" rel="noreferrer">Code Repo</a>
             <a class="btn" href="results/metrics.json" target="_blank" rel="noreferrer">Metrics JSON</a>
           </div>
         </section>
 
-        <!-- RIGHT: controls + KPIs + examples -->
+        <!-- RIGHT -->
         <aside class="card">
           <h2>Controls</h2>
 
@@ -303,8 +408,19 @@
                 <select id="dataset"></select>
               </div>
               <div>
+                <label for="task">Task</label>
+                <select id="task"></select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
                 <label for="intervention">Intervention</label>
                 <select id="intervention"></select>
+              </div>
+              <div>
+                <label for="classView">Class view</label>
+                <select id="classView"></select>
               </div>
             </div>
 
@@ -320,23 +436,37 @@
 
             <div class="kpis">
               <div class="kpi">
-                <div class="name">Accuracy</div>
-                <div class="val" id="kpiAcc">—</div>
+                <div class="name" id="kpiPrimaryName">Accuracy</div>
+                <div class="val" id="kpiPrimary">—</div>
               </div>
               <div class="kpi">
                 <div class="name">Steering score</div>
                 <div class="val" id="kpiSteer">—</div>
               </div>
               <div class="kpi">
-                <div class="name">Δ Accuracy</div>
+                <div class="name" id="kpiDeltaName">Δ Accuracy</div>
                 <div class="val" id="kpiDelta">—</div>
               </div>
             </div>
 
+            <!-- Top concepts panel -->
+            <div class="conceptsPanel">
+              <div class="conceptsHdr">
+                <div class="title">Top 5 concepts per class</div>
+                <div class="note">names shown on bars</div>
+              </div>
+              <div id="conceptsContainer"></div>
+              <div id="conceptsEmpty" class="emptyMsg" style="display:none;">
+                No concept attribution found for this selection (add <span class="mono">top_concepts_by_class</span> to metrics.json).
+              </div>
+            </div>
+
+            <!-- Examples (Classification or Generation) -->
             <div class="examples">
               <div class="ex">
                 <div class="hdr">
                   <div class="tag">Prompt</div>
+                  <div class="tag mono" id="exTaskTag">—</div>
                 </div>
                 <p class="txt mono" id="exPrompt">—</p>
               </div>
@@ -360,8 +490,7 @@
           </div>
 
           <p class="hint">
-            To plug in your real capstone results, export a grid of α values for each dataset + intervention,
-            then write them into <span class="mono">results/metrics.json</span>. No backend required.
+            Export results for both tasks: classification + CB-LLM generation, then include both under each dataset.
           </p>
         </aside>
       </div>
@@ -371,8 +500,7 @@
         <p>
           We reproduce and extend Concept Bottleneck LLM work by building tooling to select concept-linked
           neurons and apply activation interventions (ablation / amplification) while measuring downstream
-          performance and behavioral steering. This website presents a reproducible interactive view of the
-          measured tradeoffs.
+          performance and behavioral steering.
         </p>
 
         <h2 style="margin-top: 14px;">Team</h2>
@@ -381,89 +509,101 @@
     </div>
 
     <script>
-      /**
-       * GitHub Pages demo notes:
-       * - This page loads precomputed metrics from results/metrics.json
-       * - If that file doesn't exist yet, it falls back to SAMPLE_DATA.
-       * - Replace SAMPLE_DATA with your real metrics by creating results/metrics.json in this repo.
-       */
-
-      // Set your partner/capstone code repo link here (optional)
+      // Set your code repo link here (or via metrics.json meta.code_repo)
       const CODE_REPO_URL = "https://github.com/neil-dandekar/capstone";
 
+      /**
+       * New schema supports:
+       * datasets[].tasks[].interventions[]
+       * Each intervention can include:
+       *   - alphas, accuracy, steering (or other primary metric if generation)
+       *   - prompt + examples
+       *   - top_concepts_by_class keyed by alpha: { "<alpha>": { "<class>": [{name, score}, ...] } }
+       */
       const SAMPLE_DATA = {
-        meta: {
-          code_repo: CODE_REPO_URL,
-          updated: "sample"
-        },
-        datasets: [
-          {
-            id: "sst2",
-            name: "SST-2 (sample)",
-            interventions: [
-              {
-                id: "ablate_topk",
-                name: "Ablate top-k concept neurons",
-                alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
-                accuracy: [0.92, 0.90, 0.86, 0.80, 0.72],
-                steering: [0.10, 0.28, 0.45, 0.61, 0.78],
-                prompt: "The movie was surprisingly...",
-                examples: {
-                  "0.0": {
-                    before: "The movie was surprisingly engaging with strong performances.",
-                    after: "The movie was surprisingly engaging with strong performances."
+        meta: { code_repo: CODE_REPO_URL, updated: "sample" },
+        datasets: [{
+          id: "sst2",
+          name: "SST-2 (sample)",
+          tasks: [
+            {
+              id: "classification",
+              name: "Classification",
+              primary_metric: { id: "accuracy", name: "Accuracy", format: "pct" },
+              interventions: [
+                {
+                  id: "ablate_topk",
+                  name: "Ablate top-k concept neurons",
+                  alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
+                  accuracy: [0.92, 0.90, 0.86, 0.80, 0.72],
+                  steering: [0.10, 0.28, 0.45, 0.61, 0.78],
+                  prompt: "The movie was surprisingly...",
+                  examples: {
+                    "0": { before: "The movie was surprisingly engaging with strong performances.", after: "The movie was surprisingly engaging with strong performances." },
+                    "0.5": { before: "The movie was surprisingly engaging with strong performances.", after: "The movie was surprisingly uplifting, emotionally powerful, and deeply satisfying." },
+                    "1": { before: "The movie was surprisingly engaging with strong performances.", after: "The movie was surprisingly flawless, unforgettable, and one of the best films in years." }
                   },
-                  "0.5": {
-                    before: "The movie was surprisingly engaging with strong performances.",
-                    after: "The movie was surprisingly uplifting, emotionally powerful, and deeply satisfying."
-                  },
-                  "1.0": {
-                    before: "The movie was surprisingly engaging with strong performances.",
-                    after: "The movie was surprisingly flawless, unforgettable, and one of the best films in years."
+                  top_concepts_by_class: {
+                    "0.5": {
+                      "positive": [
+                        { name: "uplifting", score: 0.82 },
+                        { name: "heartfelt", score: 0.74 },
+                        { name: "excellent acting", score: 0.68 },
+                        { name: "emotional", score: 0.61 },
+                        { name: "satisfying", score: 0.57 },
+                        { name: "extra concept (ignored)", score: 0.10 }
+                      ],
+                      "negative": [
+                        { name: "boring", score: 0.22 },
+                        { name: "predictable", score: 0.20 },
+                        { name: "flat", score: 0.17 },
+                        { name: "slow", score: 0.14 },
+                        { name: "forgettable", score: 0.12 }
+                      ]
+                    }
                   }
                 }
-              },
-              {
-                id: "boost_concept",
-                name: "Boost a target concept direction",
-                alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
-                accuracy: [0.92, 0.91, 0.88, 0.83, 0.77],
-                steering: [0.10, 0.22, 0.38, 0.54, 0.69],
-                prompt: "Write a short review about the film.",
-                examples: {
-                  "0.0": {
-                    before: "A solid film with a few standout moments.",
-                    after: "A solid film with a few standout moments."
+              ]
+            },
+            {
+              id: "generation",
+              name: "CB-LLM Generation",
+              primary_metric: { id: "quality", name: "Generation quality", format: "num2" },
+              interventions: [
+                {
+                  id: "boost_concept",
+                  name: "Boost a target concept direction",
+                  alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
+                  quality: [0.61, 0.66, 0.71, 0.74, 0.73],
+                  steering: [0.12, 0.30, 0.49, 0.64, 0.76],
+                  prompt: "Write a 2–3 sentence upbeat movie review.",
+                  examples: {
+                    "0": { before: "A solid film with a few standout moments.", after: "A solid film with a few standout moments." },
+                    "0.5": { before: "A solid film with a few standout moments.", after: "A genuinely uplifting film with strong emotion and memorable scenes." },
+                    "1": { before: "A solid film with a few standout moments.", after: "An exuberant, feel-good gem that’s emotionally resonant and easy to recommend." }
                   },
-                  "0.5": {
-                    before: "A solid film with a few standout moments.",
-                    after: "A remarkably positive film with heartfelt moments and strong acting."
-                  },
-                  "1.0": {
-                    before: "A solid film with a few standout moments.",
-                    after: "An exceptionally uplifting masterpiece that delivers joy from start to finish."
+                  top_concepts_by_class: {
+                    "0.5": {
+                      "upbeat": [
+                        { name: "positive sentiment", score: 0.88 },
+                        { name: "enthusiastic tone", score: 0.81 },
+                        { name: "warmth", score: 0.69 },
+                        { name: "optimism", score: 0.60 },
+                        { name: "praise", score: 0.55 }
+                      ]
+                    }
                   }
                 }
-              }
-            ]
-          }
-        ]
+              ]
+            }
+          ]
+        }]
       };
 
       let DATA = null;
       let chart = null;
 
       function $(id) { return document.getElementById(id); }
-
-      function nearestIndex(arr, x) {
-        let best = 0;
-        let bestDist = Infinity;
-        for (let i = 0; i < arr.length; i++) {
-          const d = Math.abs(arr[i] - x);
-          if (d < bestDist) { bestDist = d; best = i; }
-        }
-        return best;
-      }
 
       function setSelectOptions(selectEl, options, getValue, getLabel) {
         selectEl.innerHTML = "";
@@ -475,21 +615,62 @@
         }
       }
 
+      function nearestIndex(arr, x) {
+        let best = 0;
+        let bestDist = Infinity;
+        for (let i = 0; i < arr.length; i++) {
+          const d = Math.abs(arr[i] - x);
+          if (d < bestDist) { bestDist = d; best = i; }
+        }
+        return best;
+      }
+
+      function normalizeAlphaKey(a) {
+        // keys may be "0", "0.0", 0, etc.
+        const n = Number(a);
+        if (Number.isNaN(n)) return String(a);
+        // keep at most 2 decimals to match typical export
+        return (Math.round(n * 100) / 100).toString();
+      }
+
       function getCurrent() {
         const dsId = $("dataset").value;
+        const taskId = $("task").value;
         const intId = $("intervention").value;
+
         const ds = DATA.datasets.find(d => d.id === dsId) || DATA.datasets[0];
-        const intervention = ds.interventions.find(i => i.id === intId) || ds.interventions[0];
-        return { ds, intervention };
+        const task = (ds.tasks || []).find(t => t.id === taskId) || (ds.tasks || [])[0];
+        const intervention = (task.interventions || []).find(i => i.id === intId) || (task.interventions || [])[0];
+
+        return { ds, task, intervention };
+      }
+
+      function getPrimaryMetric(task, intervention) {
+        // task.primary_metric defines which array to read.
+        // Defaults to "accuracy" if absent.
+        const pm = (task && task.primary_metric) || { id: "accuracy", name: "Accuracy", format: "pct" };
+        const arr = intervention[pm.id];
+        return { pm, arr };
+      }
+
+      function formatPrimaryValue(pm, v) {
+        if (v == null || Number.isNaN(v)) return "—";
+        if (pm.format === "pct") return (v * 100).toFixed(1) + "%";
+        if (pm.format === "num2") return Number(v).toFixed(2);
+        return String(v);
       }
 
       function buildChart() {
         const ctx = $("tradeoffChart");
-        const { intervention } = getCurrent();
+        const { task, intervention } = getCurrent();
+        if (!task || !intervention) return;
 
-        const points = intervention.alphas.map((a, i) => ({
-          x: intervention.steering[i],
-          y: intervention.accuracy[i],
+        const { pm, arr: primaryArr } = getPrimaryMetric(task, intervention);
+        const steerArr = intervention.steering || [];
+
+        const points = (intervention.alphas || []).map((a, i) => ({
+          x: steerArr[i],
+          y: primaryArr ? primaryArr[i] : undefined,
           alpha: a
         }));
 
@@ -499,7 +680,7 @@
           type: "line",
           data: {
             datasets: [{
-              label: "Steerability vs Accuracy",
+              label: `Steering vs ${pm.name}`,
               data: points,
               parsing: false,
               pointRadius: 4,
@@ -516,86 +697,271 @@
                 callbacks: {
                   label: (c) => {
                     const p = c.raw;
-                    const acc = (p.y * 100).toFixed(1) + "%";
-                    return `α=${p.alpha.toFixed(2)} | steering=${p.x.toFixed(2)} | acc=${acc}`;
+                    const a = Number(p.alpha);
+                    const alphaStr = Number.isFinite(a) ? a.toFixed(2) : String(p.alpha);
+                    const steerStr = (p.x != null) ? Number(p.x).toFixed(2) : "—";
+                    const yStr = (p.y != null) ? formatPrimaryValue(pm, p.y) : "—";
+                    return `α=${alphaStr} | steering=${steerStr} | ${pm.name}=${yStr}`;
                   }
                 }
               }
             },
             scales: {
               x: { title: { display: true, text: "Steering score" } },
-              y: { title: { display: true, text: "Accuracy" } }
+              y: { title: { display: true, text: task.primary_metric?.name || "Accuracy" } }
             }
           }
         });
       }
 
+      function renderTopConcepts(intervention, snapAlpha) {
+        const container = $("conceptsContainer");
+        const empty = $("conceptsEmpty");
+        container.innerHTML = "";
+
+        const alphaKey = normalizeAlphaKey(snapAlpha);
+        const block = intervention.top_concepts_by_class && intervention.top_concepts_by_class[alphaKey];
+        if (!block || typeof block !== "object") {
+          empty.style.display = "block";
+          return;
+        }
+        empty.style.display = "none";
+
+        const classView = $("classView").value;
+        const classNames = Object.keys(block);
+
+        const classesToRender =
+          (classView && classView !== "__all__")
+            ? classNames.filter(c => c === classView)
+            : classNames;
+
+        // collect max for scaling bars (per class)
+        for (const cls of classesToRender) {
+          const items = Array.isArray(block[cls]) ? block[cls].slice() : [];
+          // keep only top 5 (strongest contribution)
+          items.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+          const top5 = items.slice(0, 5);
+
+          const maxScore = Math.max(1e-9, ...top5.map(x => Math.abs(Number(x.score ?? 0))));
+
+          const classEl = document.createElement("div");
+          classEl.className = "classBlock";
+
+          const h = document.createElement("div");
+          h.className = "className";
+          h.textContent = cls;
+          classEl.appendChild(h);
+
+          if (!top5.length) {
+            const msg = document.createElement("div");
+            msg.className = "emptyMsg";
+            msg.textContent = "No concepts available for this class.";
+            classEl.appendChild(msg);
+          } else {
+            for (const c of top5) {
+              const score = Number(c.score ?? 0);
+              const pct = Math.max(0, Math.min(100, (Math.abs(score) / maxScore) * 100));
+
+              const row = document.createElement("div");
+              row.className = "barRow";
+
+              const track = document.createElement("div");
+              track.className = "barTrack";
+
+              const fill = document.createElement("div");
+              fill.className = "barFill";
+              fill.style.width = pct.toFixed(1) + "%";
+
+              const label = document.createElement("div");
+              label.className = "barLabel";
+              label.textContent = c.name ?? "—";
+
+              track.appendChild(fill);
+              track.appendChild(label);
+
+              const val = document.createElement("div");
+              val.className = "barVal";
+              val.textContent = Number.isFinite(score) ? score.toFixed(2) : "—";
+
+              row.appendChild(track);
+              row.appendChild(val);
+              classEl.appendChild(row);
+            }
+          }
+
+          container.appendChild(classEl);
+        }
+      }
+
       function updateUI() {
-        const { intervention } = getCurrent();
+        const { task, intervention } = getCurrent();
+        if (!task || !intervention) return;
 
         const alpha = parseFloat($("alpha").value);
         $("alphaVal").textContent = alpha.toFixed(2);
 
-        const i = nearestIndex(intervention.alphas, alpha);
-        const snapAlpha = intervention.alphas[i];
-        $("alphaSnap").textContent = snapAlpha.toFixed(2);
-        $("exAlpha").textContent = snapAlpha.toFixed(2);
+        const i = nearestIndex(intervention.alphas || [0], alpha);
+        const snapAlpha = (intervention.alphas || [0])[i] ?? 0;
+        $("alphaSnap").textContent = Number(snapAlpha).toFixed(2);
+        $("exAlpha").textContent = Number(snapAlpha).toFixed(2);
 
-        const acc = intervention.accuracy[i];
-        const steer = intervention.steering[i];
+        const { pm, arr: primaryArr } = getPrimaryMetric(task, intervention);
+        $("kpiPrimaryName").textContent = pm.name;
+        $("kpiDeltaName").textContent = `Δ ${pm.name}`;
 
-        $("kpiAcc").textContent = (acc * 100).toFixed(1) + "%";
-        $("kpiSteer").textContent = steer.toFixed(2);
+        const steerArr = intervention.steering || [];
+        const primary = primaryArr ? primaryArr[i] : null;
+        const steer = steerArr[i];
 
-        // Δ accuracy vs baseline alpha=0 (assumes alphas includes 0.0)
-        const baseIdx = nearestIndex(intervention.alphas, 0.0);
-        const baseAcc = intervention.accuracy[baseIdx];
-        const delta = (acc - baseAcc) * 100;
-        const sign = delta >= 0 ? "+" : "";
-        $("kpiDelta").textContent = `${sign}${delta.toFixed(1)} pts`;
+        $("kpiPrimary").textContent = formatPrimaryValue(pm, primary);
+        $("kpiSteer").textContent = (steer != null) ? Number(steer).toFixed(2) : "—";
 
+        // Δ vs baseline alpha=0
+        const baseIdx = nearestIndex(intervention.alphas || [0], 0.0);
+        const basePrimary = primaryArr ? primaryArr[baseIdx] : null;
+
+        let deltaStr = "—";
+        if (primary != null && basePrimary != null) {
+          const delta = Number(primary) - Number(basePrimary);
+          const sign = delta >= 0 ? "+" : "";
+          // if pct-format metric, show "pts" in percentage points
+          if (pm.format === "pct") deltaStr = `${sign}${(delta * 100).toFixed(1)} pts`;
+          else deltaStr = `${sign}${delta.toFixed(2)}`;
+        }
+        $("kpiDelta").textContent = deltaStr;
+
+        // Examples
+        $("exTaskTag").textContent = task.name || "—";
         $("exPrompt").textContent = intervention.prompt || "—";
 
-        // Examples: use exact snapAlpha key if present, else use baseline
-        const key = String(snapAlpha);
-        const ex = (intervention.examples && (intervention.examples[key] || intervention.examples[key.replace(".0","")])) || null;
+        const ex = intervention.examples || {};
+        const keySnap = normalizeAlphaKey(snapAlpha);
+        const keyBase = normalizeAlphaKey((intervention.alphas || [0])[baseIdx] ?? 0);
 
-        const baselineKey = String(intervention.alphas[baseIdx]);
-        const baselineEx = (intervention.examples && (intervention.examples[baselineKey] || intervention.examples[baselineKey.replace(".0","")])) || null;
+        const baselineEx = ex[keyBase] || ex[String(Number(keyBase).toFixed(1))] || ex["0"] || ex["0.0"] || null;
+        const snappedEx = ex[keySnap] || ex[String(Number(keySnap).toFixed(1))] || null;
 
         if (baselineEx) $("exBefore").textContent = baselineEx.before || "—";
-        if (ex) $("exAfter").textContent = ex.after || "—";
+        else $("exBefore").textContent = "—";
+
+        if (snappedEx) $("exAfter").textContent = snappedEx.after || "—";
+        else $("exAfter").textContent = "—";
+
+        // Concepts
+        renderTopConcepts(intervention, snapAlpha);
+      }
+
+      function rebuildTaskInterventions() {
+        const dsId = $("dataset").value;
+        const ds = DATA.datasets.find(d => d.id === dsId) || DATA.datasets[0];
+
+        // tasks
+        const tasks = ds.tasks || [];
+        setSelectOptions($("task"), tasks, t => t.id, t => t.name);
+
+        // interventions from selected task
+        const taskId = $("task").value;
+        const task = tasks.find(t => t.id === taskId) || tasks[0];
+
+        const interventions = (task && task.interventions) ? task.interventions : [];
+        setSelectOptions($("intervention"), interventions, i => i.id, i => i.name);
+
+        // class list for concept view (based on currently selected intervention; update again after selection)
+        buildClassViewOptions();
+
+        buildChart();
+        updateUI();
+      }
+
+      function buildClassViewOptions() {
+        const { intervention } = getCurrent();
+        const sel = $("classView");
+        const options = [{ id: "__all__", name: "All classes" }];
+
+        // best-effort gather class names across alpha keys
+        const tcbc = intervention && intervention.top_concepts_by_class;
+        if (tcbc && typeof tcbc === "object") {
+          const classSet = new Set();
+          for (const aKey of Object.keys(tcbc)) {
+            const block = tcbc[aKey];
+            if (block && typeof block === "object") {
+              Object.keys(block).forEach(c => classSet.add(c));
+            }
+          }
+          for (const c of Array.from(classSet).sort()) {
+            options.push({ id: c, name: c });
+          }
+        }
+
+        setSelectOptions(sel, options, o => o.id, o => o.name);
       }
 
       function onDatasetChange() {
-        const dsId = $("dataset").value;
-        const ds = DATA.datasets.find(d => d.id === dsId) || DATA.datasets[0];
-        setSelectOptions($("intervention"), ds.interventions, i => i.id, i => i.name);
+        rebuildTaskInterventions();
+      }
+
+      function onTaskChange() {
+        // rebuild intervention list for task
+        const { ds } = getCurrent();
+        const taskId = $("task").value;
+        const task = (ds.tasks || []).find(t => t.id === taskId) || (ds.tasks || [])[0];
+        setSelectOptions($("intervention"), task?.interventions || [], i => i.id, i => i.name);
+        buildClassViewOptions();
         buildChart();
         updateUI();
+      }
+
+      function onInterventionChange() {
+        buildClassViewOptions();
+        buildChart();
+        updateUI();
+      }
+
+      function setStatus(ok, msg, source) {
+        const dot = $("dataDot");
+        const status = $("dataStatus");
+        const src = $("dataSource");
+        dot.classList.remove("ok", "bad");
+        dot.classList.add(ok ? "ok" : "bad");
+        status.textContent = msg;
+        src.textContent = source ? `source: ${source}` : "";
       }
 
       async function loadData() {
         $("codeRepoLink").href = CODE_REPO_URL;
 
+        // default to sample until fetch succeeds
+        DATA = SAMPLE_DATA;
+
         try {
           const res = await fetch("results/metrics.json", { cache: "no-store" });
           if (!res.ok) throw new Error("metrics.json not found");
-          DATA = await res.json();
-        } catch {
-          DATA = SAMPLE_DATA;
+          const json = await res.json();
+
+          // minimal validation to prevent hard crash
+          if (!json || !Array.isArray(json.datasets)) throw new Error("Invalid metrics.json schema");
+
+          DATA = json;
+          setStatus(true, "Loaded metrics.json", "results/metrics.json");
+        } catch (e) {
+          setStatus(false, "Using SAMPLE_DATA fallback", "embedded sample");
         }
 
-        // Use meta link if provided
         if (DATA.meta && DATA.meta.code_repo) {
           $("codeRepoLink").href = DATA.meta.code_repo;
         }
 
+        // Populate dataset select
         setSelectOptions($("dataset"), DATA.datasets, d => d.id, d => d.name);
-        onDatasetChange();
 
+        // Initialize task/intervention selects
+        rebuildTaskInterventions();
+
+        // listeners
         $("dataset").addEventListener("change", onDatasetChange);
-        $("intervention").addEventListener("change", () => { buildChart(); updateUI(); });
+        $("task").addEventListener("change", onTaskChange);
+        $("intervention").addEventListener("change", onInterventionChange);
+        $("classView").addEventListener("change", updateUI);
         $("alpha").addEventListener("input", updateUI);
       }
 
@@ -603,4 +969,3 @@
     </script>
   </body>
 </html>
-
