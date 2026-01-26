@@ -350,6 +350,18 @@
         font-size: 14px;
         margin-top: 8px;
       }
+
+      .sankey-frame {
+        width: 100%;
+        height: 520px;
+        border: none;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .sankey-frame--tall {
+        height: 1000px;
+      }
     </style>
   </head>
 
@@ -494,6 +506,36 @@
           </p>
         </aside>
       </div>
+
+      <section class="card" style="margin-top: 16px;">
+        <h2>Text classification task</h2>
+        <p>
+          Visualizes how concept activations flow into predicted classes.
+        </p>
+        <div style="margin-top: 12px;">
+          <iframe
+            class="sankey-frame"
+            src="sankey_embed.html"
+            title="Concept to class flow diagram"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top: 16px;">
+        <h2>Text generation task</h2>
+        <p>
+          Visualizes how concept activations flow into predicted classes.
+        </p>
+        <div style="margin-top: 12px;">
+          <iframe
+            class="sankey-frame sankey-frame--tall"
+            src="sankey_generation_embed.html"
+            title="Neuron to token flow diagram"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </section>
 
       <section class="card" style="margin-top: 16px;">
         <h2>Project Summary</h2>
