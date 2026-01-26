@@ -1,1 +1,156 @@
+:root {
+  --bg: #ffffff;
+  --text: #111827;
+  --muted: #4b5563;
+  --link: #1f2937;
+  --border: #e5e7eb;
+  --codebg: #f3f4f6;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height: 1.55;
+}
+
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 44px 18px 72px;
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+  font-size: clamp(28px, 3.2vw, 44px);
+  line-height: 1.1;
+}
+
+.authors {
+  margin: 0;
+  font-size: 16px;
+}
+
+.affil, .meta {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.toplinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.link {
+  display: inline-block;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--link);
+  background: #fff;
+}
+
+.link:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 26px 0;
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+
+p { margin: 10px 0; color: var(--text); }
+
+ul {
+  margin: 10px 0 0 18px;
+  color: var(--text);
+}
+
+li { margin: 6px 0; }
+
+code {
+  background: var(--codebg);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.95em;
+}
+
+.figure {
+  margin: 16px 0 0;
+}
+
+.figwrap {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.figwrap img {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+}
+
+.figwrap.placeholder .placeholderbox {
+  display: block;
+}
+
+.placeholderbox {
+  display: none;
+  border-radius: 10px;
+  padding: 22px 14px;
+  background: #fafafa;
+  border: 1px dashed var(--border);
+}
+
+.ph-title {
+  font-weight: 650;
+  margin-bottom: 6px;
+}
+
+.ph-sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+figcaption {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.footer {
+  margin-top: 26px;
+}
+
+.small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
 
