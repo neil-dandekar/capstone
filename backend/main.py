@@ -92,3 +92,46 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+
+
+
+from pydantic import BaseModel
+import time
+import torch
+import torch.nn as nn
+
+class RunModelRequest(BaseModel):
+    x: list[float]
+
+@app.post("/api/run_model_proof")
+def run_model_proof(req: RunModelRequest):
+    """
+    Proof endpoint: runs a small model forward pass to show that
+    backend inference works.
+    """
+    try:
+        model = nn.Sequential(
+            nn.Linear(len(req.x), 16),
+            nn.ReLU(),
+            nn.Linear(16, 3),
+        )
+        model.eval()
+
+        x = torch.tensor(req.x, dtype=torch.float32).unsqueeze(0)
+
+        t0 = time.time()
+        with torch.no_grad():
+            logits = model(x)
+            pred = int(torch.argmax(logits, dim=1).item())
+
+        ms = int((time.time() - t0) * 1000)
+
+        return {
+            "prediction": pred,
+            "logits": logits.squeeze(0).tolist(),
+            "runtime_ms": ms,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
