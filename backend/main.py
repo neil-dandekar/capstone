@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 from typing import Any, Dict
 
+import torch
+import torch.nn as nn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from data import coerce_sankey, list_artifacts, load_artifact_payload
 
@@ -24,6 +28,8 @@ app.add_middleware(
 )
 
 
+# ---------------- API ----------------
+
 @app.get("/api/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
@@ -34,7 +40,10 @@ def results_index() -> Dict[str, Any]:
     artifacts = list_artifacts()
     return {
         "count": len(artifacts),
-        "artifacts": [{"key": a.key, "kind": a.kind, "path": str(a.path.relative_to(REPO_ROOT))} for a in artifacts],
+        "artifacts": [
+            {"key": a.key, "kind": a.kind, "path": str(a.path.relative_to(REPO_ROOT))}
+            for a in artifacts
+        ],
     }
 
 
@@ -51,6 +60,7 @@ def sankey_get(key: str) -> Dict[str, Any]:
     payload = load_artifact_payload(key)
     if payload is None:
         raise HTTPException(status_code=404, detail=f"Unknown artifact '{key}'")
+
     sankey = coerce_sankey(payload)
     if sankey is None:
         raise HTTPException(
@@ -60,7 +70,41 @@ def sankey_get(key: str) -> Dict[str, Any]:
     return sankey
 
 
-# --- serve your existing front-end ---
+# ---- PROOF: run a tiny model forward pass ----
+
+class RunModelRequest(BaseModel):
+    x: list[float]
+
+
+@app.post("/api/run_model_proof")
+def run_model_proof(req: RunModelRequest) -> Dict[str, Any]:
+    if len(req.x) == 0:
+        raise HTTPException(status_code=400, detail="x must be a non-empty list of floats")
+
+    model = nn.Sequential(
+        nn.Linear(len(req.x), 16),
+        nn.ReLU(),
+        nn.Linear(16, 3),
+    )
+    model.eval()
+
+    x = torch.tensor(req.x, dtype=torch.float32).unsqueeze(0)
+
+    t0 = time.time()
+    with torch.no_grad():
+        logits = model(x)
+        pred = int(torch.argmax(logits, dim=1).item())
+    runtime_ms = int((time.time() - t0) * 1000)
+
+    return {
+        "prediction": pred,
+        "logits": logits.squeeze(0).tolist(),
+        "runtime_ms": runtime_ms,
+    }
+
+
+# ---------------- Static site hosting ----------------
+
 assets_dir = REPO_ROOT / "assets"
 if assets_dir.exists():
     app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
@@ -87,51 +131,11 @@ def top_level_files(filename: str) -> FileResponse:
     return FileResponse(str(p))
 
 
+# ---------------- Entrypoint ----------------
+
 if __name__ == "__main__":
     import uvicorn
 
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
-
-
-
-from pydantic import BaseModel
-import time
-import torch
-import torch.nn as nn
-
-class RunModelRequest(BaseModel):
-    x: list[float]
-
-@app.post("/api/run_model_proof")
-def run_model_proof(req: RunModelRequest):
-    """
-    Proof endpoint: runs a small model forward pass to show that
-    backend inference works.
-    """
-    try:
-        model = nn.Sequential(
-            nn.Linear(len(req.x), 16),
-            nn.ReLU(),
-            nn.Linear(16, 3),
-        )
-        model.eval()
-
-        x = torch.tensor(req.x, dtype=torch.float32).unsqueeze(0)
-
-        t0 = time.time()
-        with torch.no_grad():
-            logits = model(x)
-            pred = int(torch.argmax(logits, dim=1).item())
-
-        ms = int((time.time() - t0) * 1000)
-
-        return {
-            "prediction": pred,
-            "logits": logits.squeeze(0).tolist(),
-            "runtime_ms": ms,
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
