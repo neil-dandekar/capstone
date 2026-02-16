@@ -10,7 +10,7 @@
         />
 
         <link rel="stylesheet" href="style.css" />
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        <script src="api/client.js"></script>
 
         <style>
             @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
@@ -349,7 +349,7 @@
                 height: 340px !important;
             }
 
-            /* Status line for whether metrics.json loaded */
+            /* Status line for backend/API connectivity */
             .statusline {
                 margin-top: 10px;
                 font-size: 13px;
@@ -623,6 +623,29 @@
                 color: var(--muted);
             }
 
+            .api-banner {
+                margin-top: 10px;
+                border-radius: 12px;
+                padding: 10px 12px;
+                font-size: 13.5px;
+                line-height: 1.4;
+                border: 1px solid transparent;
+                display: none;
+                white-space: pre-wrap;
+            }
+
+            .api-banner.warn {
+                background: rgba(245, 158, 11, 0.14);
+                border-color: rgba(245, 158, 11, 0.4);
+                color: #fcd34d;
+            }
+
+            .api-banner.error {
+                background: rgba(239, 68, 68, 0.14);
+                border-color: rgba(239, 68, 68, 0.45);
+                color: #fecaca;
+            }
+
             .sankey-frame {
                 width: 100%;
                 height: 520px;
@@ -640,18 +663,13 @@
     <body>
         <div class="wrap">
             <header>
-                <div class="pill">
-                    Interactive demo: <b>precomputed</b> results on GitHub Pages
-                    <span class="mono" style="opacity: 0.7"
-                        >(no server required)</span
-                    >
-                </div>
+                <div class="pill">Interactive demo: <b>live backend API</b></div>
 
                 <h1>Concept Bottleneck LLM Intervention Console</h1>
                 <p class="sub">
                     Edit concept-linked neurons, run baseline vs intervened, and
                     inspect evidence. This UI is a researcher-focused shell over
-                    precomputed JSON for fast iteration.
+                    live CB-LLM backend responses.
                 </p>
             </header>
 
@@ -691,61 +709,6 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div>
-                            <label for="intervention"
-                                >Intervention preset</label
-                            >
-                            <select id="intervention"></select>
-                            <p class="muted" style="margin-top: 6px">
-                                Presets are saved intervention bundles (e.g., a
-                                specific concept steering setup).
-                            </p>
-                        </div>
-                        <div>
-                            <label for="task"
-                                >Task (auto-set by Task Mode)</label
-                            >
-                            <select id="task" style="display: none"></select>
-                            <p class="muted" style="margin-top: 6px">
-                                The task updates automatically based on Task
-                                Mode and dataset availability.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div>
-                            <label for="classView">Class view</label>
-                            <select id="classView"></select>
-                            <p class="muted" style="margin-top: 6px">
-                                Filters which class-specific concept
-                                attributions are shown below.
-                            </p>
-                        </div>
-                        <div>
-                            <label for="alpha">
-                                Intervention strength (α) —
-                                <span class="mono" id="alphaVal">0.50</span>
-                            </label>
-                            <div class="sliderline">
-                                <input
-                                    id="alpha"
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.05"
-                                    value="0.5"
-                                />
-                                <span class="pill"
-                                    ><span>snap:</span>
-                                    <b class="mono" id="alphaSnap"
-                                        >0.50</b
-                                    ></span
-                                >
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="panel-grid" style="margin-top: 16px">
@@ -962,31 +925,6 @@
                                 </div>
                             </div>
 
-                            <div class="controls" style="margin-top: 14px">
-                                <div>
-                                    <label>Recipes (reproducibility)</label>
-                                    <div class="toolbar">
-                                        <button class="btn" id="saveRecipeBtn">
-                                            Save recipe
-                                        </button>
-                                        <button class="btn" id="loadRecipeBtn">
-                                            Load recipe
-                                        </button>
-                                        <button
-                                            class="btn ghost"
-                                            id="copyRecipeBtn"
-                                        >
-                                            Copy JSON
-                                        </button>
-                                    </div>
-                                    <textarea
-                                        id="recipeJson"
-                                        rows="6"
-                                        style="margin-top: 8px"
-                                        placeholder="Recipe JSON will appear here"
-                                    ></textarea>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -998,32 +936,7 @@
                     <span class="pill">Loaded: <b id="loadedStatus">—</b></span>
                 </div>
 
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="classification">
-                        Classification
-                    </button>
-                    <button class="tab-btn" data-tab="generation">
-                        Generation
-                    </button>
-                </div>
-
                 <div class="tab-panel active" id="tab-classification">
-                    <div class="row">
-                        <div>
-                            <label for="exampleSelect">Example selector</label>
-                            <select id="exampleSelect"></select>
-                        </div>
-                        <div class="toolbar" style="align-items: flex-end">
-                            <button class="btn" id="randomExampleBtn">
-                                Random sample
-                            </button>
-                            <label class="pill">
-                                <input id="useCustomText" type="checkbox" />
-                                Use my own text
-                            </label>
-                        </div>
-                    </div>
-                    <div class="muted" id="exampleMeta">Example metadata</div>
                     <label for="inputText">Input text</label>
                     <textarea
                         id="inputText"
@@ -1043,26 +956,6 @@
                 </div>
 
                 <div class="tab-panel" id="tab-generation">
-                    <div class="row">
-                        <div>
-                            <label for="genExampleSelect"
-                                >Example selector</label
-                            >
-                            <select id="genExampleSelect"></select>
-                        </div>
-                        <div class="toolbar" style="align-items: flex-end">
-                            <button class="btn" id="randomGenExampleBtn">
-                                Random sample
-                            </button>
-                            <label class="pill">
-                                <input id="genUseCustomText" type="checkbox" />
-                                Use my own text
-                            </label>
-                        </div>
-                    </div>
-                    <div class="muted" id="genExampleMeta">
-                        Example metadata
-                    </div>
                     <label for="genPrompt">Prompt</label>
                     <textarea
                         id="genPrompt"
@@ -1122,12 +1015,11 @@
             <section class="card section" id="results">
                 <div class="section-head">
                     <h2>Results & Evidence</h2>
-                    <div class="pill">
-                        Baseline locked: <b id="baselineLockedStatus">false</b>
-                    </div>
                 </div>
+                <div id="apiWarningBanner" class="api-banner warn"></div>
+                <div id="apiErrorBanner" class="api-banner error"></div>
 
-                <div class="kpis">
+                <div class="kpis" style="display: none">
                     <div class="kpi">
                         <div class="name" id="kpiPrimaryName">Accuracy</div>
                         <div class="val" id="kpiPrimary">—</div>
@@ -1142,7 +1034,7 @@
                     </div>
                 </div>
 
-                <div class="results-grid" style="margin-top: 12px">
+                <div class="results-grid" style="display: none; margin-top: 12px">
                     <div class="result-card">
                         <h3 style="margin: 0">Baseline</h3>
                         <div class="output-block">
@@ -1197,31 +1089,16 @@
                 <div class="evidence-grid">
                     <div class="evidence-card">
                         <div class="section-head" style="margin-bottom: 10px">
-                            <h3 style="margin: 0">Tradeoff Visualization</h3>
-                            <div class="pill">Steering vs primary metric</div>
-                        </div>
-                        <p class="muted" style="margin-top: 0">
-                            Steering score measures behavioral shift from the
-                            intervention; the primary metric (e.g., accuracy)
-                            tracks task performance. The curve shows their
-                            tradeoff across α values.
-                        </p>
-                        <canvas
-                            id="tradeoffChart"
-                            aria-label="Steerability vs Accuracy chart"
-                        ></canvas>
-                    </div>
-
-                    <div class="evidence-card">
-                        <div class="section-head" style="margin-bottom: 10px">
                             <h3 style="margin: 0">Top Concepts</h3>
-                            <label class="pill">
-                                <input
-                                    id="onlyIntervenedFilter"
-                                    type="checkbox"
-                                />
-                                Only intervened concepts
-                            </label>
+                        </div>
+                        <div class="output-block" style="margin-bottom: 12px">
+                            <div class="output-title">Latest Model Output</div>
+                            <div class="output-text" id="modelOutputText">
+                                Run the model to view output.
+                            </div>
+                            <div class="output-meta" id="modelOutputMeta">
+                                No response yet.
+                            </div>
                         </div>
                         <div id="conceptsContainer"></div>
                         <div
@@ -1244,34 +1121,6 @@
                         </table>
                     </div>
 
-                    <div class="evidence-card">
-                        <div class="section-head" style="margin-bottom: 10px">
-                            <h3 style="margin: 0">Token / Time Evidence</h3>
-                        </div>
-                        <div class="muted" id="tokenEvidence">
-                            Token-level activations are not available yet.
-                            Showing prompt-level top concepts instead.
-                        </div>
-                    </div>
-
-                    <div class="evidence-card">
-                        <div class="section-head" style="margin-bottom: 10px">
-                            <h3 style="margin: 0">Reproducibility</h3>
-                        </div>
-                        <div class="muted" id="reproducibilityInfo">—</div>
-                        <details style="margin-top: 10px">
-                            <summary class="muted">
-                                Intervention recipe JSON
-                            </summary>
-                            <pre
-                                class="mono"
-                                id="recipeFooter"
-                                style="white-space: pre-wrap; margin-top: 8px"
-                            >
-—</pre
-                            >
-                        </details>
-                    </div>
                 </div>
 
                 <div class="section" style="margin-top: 16px">
@@ -1309,13 +1158,6 @@
                         rel="noreferrer"
                         >Code Repo</a
                     >
-                    <a
-                        class="btn"
-                        href="results/metrics.json"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Metrics JSON</a
-                    >
                 </div>
 
                 <div class="card" style="padding: 14px; margin-top: 16px">
@@ -1335,372 +1177,56 @@
         </div>
 
         <script>
-            // Set your code repo link here (or via metrics.json meta.code_repo)
+            // Set your code repo link here.
             const CODE_REPO_URL = "https://github.com/neil-dandekar/capstone";
 
-            /**
-             * New schema supports:
-             * datasets[].tasks[].interventions[]
-             * Each intervention can include:
-             *   - alphas, accuracy, steering (or other primary metric if generation)
-             *   - prompt + examples
-             *   - top_concepts_by_class keyed by alpha: { "<alpha>": { "<class>": [{name, score}, ...] } }
-             */
-            const SAMPLE_DATA = {
-                meta: { code_repo: CODE_REPO_URL, updated: "sample" },
+            const API_CATALOG = {
+                meta: { code_repo: CODE_REPO_URL, model_checkpoint: null },
                 datasets: [
                     {
                         id: "sst2",
-                        name: "SST-2 (sample)",
+                        name: "SST-2",
                         tasks: [
-                            {
-                                id: "classification",
-                                name: "Classification",
-                                primary_metric: {
-                                    id: "accuracy",
-                                    name: "Accuracy",
-                                    format: "pct",
-                                },
-                                interventions: [
-                                    {
-                                        id: "ablate_topk",
-                                        name: "Ablate top-k concept neurons",
-                                        alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
-                                        accuracy: [0.92, 0.9, 0.86, 0.8, 0.72],
-                                        steering: [0.1, 0.28, 0.45, 0.61, 0.78],
-                                        prompt: "The movie was surprisingly...",
-                                        examples: {
-                                            0: {
-                                                before: "The movie was surprisingly engaging with strong performances.",
-                                                after: "The movie was surprisingly engaging with strong performances.",
-                                            },
-                                            0.5: {
-                                                before: "The movie was surprisingly engaging with strong performances.",
-                                                after: "The movie was surprisingly uplifting, emotionally powerful, and deeply satisfying.",
-                                            },
-                                            1: {
-                                                before: "The movie was surprisingly engaging with strong performances.",
-                                                after: "The movie was surprisingly flawless, unforgettable, and one of the best films in years.",
-                                            },
-                                        },
-                                        top_concepts_by_class: {
-                                            0.5: {
-                                                positive: [
-                                                    {
-                                                        name: "uplifting",
-                                                        score: 0.82,
-                                                    },
-                                                    {
-                                                        name: "heartfelt",
-                                                        score: 0.74,
-                                                    },
-                                                    {
-                                                        name: "excellent acting",
-                                                        score: 0.68,
-                                                    },
-                                                    {
-                                                        name: "emotional",
-                                                        score: 0.61,
-                                                    },
-                                                    {
-                                                        name: "satisfying",
-                                                        score: 0.57,
-                                                    },
-                                                    {
-                                                        name: "extra concept (ignored)",
-                                                        score: 0.1,
-                                                    },
-                                                ],
-                                                negative: [
-                                                    {
-                                                        name: "boring",
-                                                        score: 0.22,
-                                                    },
-                                                    {
-                                                        name: "predictable",
-                                                        score: 0.2,
-                                                    },
-                                                    {
-                                                        name: "flat",
-                                                        score: 0.17,
-                                                    },
-                                                    {
-                                                        name: "slow",
-                                                        score: 0.14,
-                                                    },
-                                                    {
-                                                        name: "forgettable",
-                                                        score: 0.12,
-                                                    },
-                                                ],
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                            {
-                                id: "generation",
-                                name: "CB-LLM Generation",
-                                primary_metric: {
-                                    id: "quality",
-                                    name: "Generation quality",
-                                    format: "num2",
-                                },
-                                interventions: [
-                                    {
-                                        id: "boost_concept",
-                                        name: "Boost a target concept direction",
-                                        alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
-                                        quality: [0.61, 0.66, 0.71, 0.74, 0.73],
-                                        steering: [0.12, 0.3, 0.49, 0.64, 0.76],
-                                        prompt: "Write a 2–3 sentence upbeat movie review.",
-                                        examples: {
-                                            0: {
-                                                before: "A solid film with a few standout moments.",
-                                                after: "A solid film with a few standout moments.",
-                                            },
-                                            0.5: {
-                                                before: "A solid film with a few standout moments.",
-                                                after: "A genuinely uplifting film with strong emotion and memorable scenes.",
-                                            },
-                                            1: {
-                                                before: "A solid film with a few standout moments.",
-                                                after: "An exuberant, feel-good gem that’s emotionally resonant and easy to recommend.",
-                                            },
-                                        },
-                                        top_concepts_by_class: {
-                                            0.5: {
-                                                upbeat: [
-                                                    {
-                                                        name: "positive sentiment",
-                                                        score: 0.88,
-                                                    },
-                                                    {
-                                                        name: "enthusiastic tone",
-                                                        score: 0.81,
-                                                    },
-                                                    {
-                                                        name: "warmth",
-                                                        score: 0.69,
-                                                    },
-                                                    {
-                                                        name: "optimism",
-                                                        score: 0.6,
-                                                    },
-                                                    {
-                                                        name: "praise",
-                                                        score: 0.55,
-                                                    },
-                                                ],
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
+                            { id: "classification", name: "Classification", interventions: [{}] },
+                            { id: "generation", name: "Generation", interventions: [{}] },
                         ],
                     },
-
-                    // =========================
-                    // AG NEWS (sample)
-                    // =========================
+                    {
+                        id: "SetFit/sst2",
+                        name: "SetFit/sst2",
+                        tasks: [
+                            { id: "classification", name: "Classification", interventions: [{}] },
+                            { id: "generation", name: "Generation", interventions: [{}] },
+                        ],
+                    },
                     {
                         id: "ag_news",
-                        name: "AG News (sample)",
+                        name: "AG News",
                         tasks: [
-                            {
-                                id: "classification",
-                                name: "Classification",
-                                primary_metric: {
-                                    id: "accuracy",
-                                    name: "Accuracy",
-                                    format: "pct",
-                                },
-                                interventions: [
-                                    {
-                                        id: "ablate_topk",
-                                        name: "Ablate top-k concept neurons",
-                                        alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
-                                        accuracy: [
-                                            0.88, 0.86, 0.83, 0.78, 0.72,
-                                        ],
-                                        steering: [
-                                            0.08, 0.22, 0.39, 0.55, 0.67,
-                                        ],
-                                        prompt: "Classify this AG News headline: “Global markets rally after policy shift”",
-                                        examples: {
-                                            0: {
-                                                before: "Pred: Business",
-                                                after: "Pred: Business",
-                                            },
-                                            0.5: {
-                                                before: "Pred: Business",
-                                                after: "Pred: World",
-                                            },
-                                            1: {
-                                                before: "Pred: Business",
-                                                after: "Pred: Sci/Tech",
-                                            },
-                                        },
-                                        top_concepts_by_class: {
-                                            0.5: {
-                                                World: [
-                                                    {
-                                                        name: "geopolitics",
-                                                        score: 0.81,
-                                                    },
-                                                    {
-                                                        name: "conflict",
-                                                        score: 0.73,
-                                                    },
-                                                    {
-                                                        name: "diplomacy",
-                                                        score: 0.64,
-                                                    },
-                                                    {
-                                                        name: "international",
-                                                        score: 0.59,
-                                                    },
-                                                    {
-                                                        name: "security",
-                                                        score: 0.53,
-                                                    },
-                                                ],
-                                                Sports: [
-                                                    {
-                                                        name: "game outcome",
-                                                        score: 0.77,
-                                                    },
-                                                    {
-                                                        name: "team performance",
-                                                        score: 0.69,
-                                                    },
-                                                    {
-                                                        name: "season",
-                                                        score: 0.61,
-                                                    },
-                                                    {
-                                                        name: "player stats",
-                                                        score: 0.55,
-                                                    },
-                                                    {
-                                                        name: "match",
-                                                        score: 0.49,
-                                                    },
-                                                ],
-                                                Business: [
-                                                    {
-                                                        name: "market movement",
-                                                        score: 0.74,
-                                                    },
-                                                    {
-                                                        name: "earnings",
-                                                        score: 0.66,
-                                                    },
-                                                    {
-                                                        name: "stocks",
-                                                        score: 0.6,
-                                                    },
-                                                    {
-                                                        name: "revenue",
-                                                        score: 0.54,
-                                                    },
-                                                    {
-                                                        name: "trade",
-                                                        score: 0.48,
-                                                    },
-                                                ],
-                                                "Sci/Tech": [
-                                                    {
-                                                        name: "innovation",
-                                                        score: 0.79,
-                                                    },
-                                                    {
-                                                        name: "research",
-                                                        score: 0.7,
-                                                    },
-                                                    {
-                                                        name: "software",
-                                                        score: 0.62,
-                                                    },
-                                                    { name: "AI", score: 0.56 },
-                                                    {
-                                                        name: "devices",
-                                                        score: 0.5,
-                                                    },
-                                                ],
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-
-                            // optional: generation task sample for AG News (remove if you don't want it)
-                            {
-                                id: "generation",
-                                name: "CB-LLM Generation",
-                                primary_metric: {
-                                    id: "quality",
-                                    name: "Generation quality",
-                                    format: "num2",
-                                },
-                                interventions: [
-                                    {
-                                        id: "boost_concept",
-                                        name: "Boost a target concept direction",
-                                        alphas: [0.0, 0.25, 0.5, 0.75, 1.0],
-                                        quality: [0.58, 0.62, 0.67, 0.7, 0.69],
-                                        steering: [0.1, 0.26, 0.43, 0.6, 0.71],
-                                        prompt: "Write a 2–3 sentence neutral news summary of the headline.",
-                                        examples: {
-                                            0: {
-                                                before: "Markets moved today after policy news.",
-                                                after: "Markets moved today after policy news.",
-                                            },
-                                            0.5: {
-                                                before: "Markets moved today after policy news.",
-                                                after: "Markets reacted to policy changes as investors rebalanced positions.",
-                                            },
-                                            1: {
-                                                before: "Markets moved today after policy news.",
-                                                after: "Global equities responded to policy adjustments, with investors reassessing growth expectations.",
-                                            },
-                                        },
-                                        top_concepts_by_class: {
-                                            0.5: {
-                                                "neutral-summary": [
-                                                    {
-                                                        name: "objective tone",
-                                                        score: 0.86,
-                                                    },
-                                                    {
-                                                        name: "concise phrasing",
-                                                        score: 0.78,
-                                                    },
-                                                    {
-                                                        name: "factual framing",
-                                                        score: 0.7,
-                                                    },
-                                                    {
-                                                        name: "named entities",
-                                                        score: 0.62,
-                                                    },
-                                                    {
-                                                        name: "time/place context",
-                                                        score: 0.55,
-                                                    },
-                                                ],
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
+                            { id: "classification", name: "Classification", interventions: [{}] },
+                            { id: "generation", name: "Generation", interventions: [{}] },
+                        ],
+                    },
+                    {
+                        id: "yelp_polarity",
+                        name: "Yelp Polarity",
+                        tasks: [
+                            { id: "classification", name: "Classification", interventions: [{}] },
+                            { id: "generation", name: "Generation", interventions: [{}] },
+                        ],
+                    },
+                    {
+                        id: "dbpedia_14",
+                        name: "DBPedia 14",
+                        tasks: [
+                            { id: "classification", name: "Classification", interventions: [{}] },
+                            { id: "generation", name: "Generation", interventions: [{}] },
                         ],
                     },
                 ],
             };
 
             let DATA = null;
-            let chart = null;
             const state = {
                 selectedTaskMode: "classification",
                 selectedDataset: "",
@@ -1714,6 +1240,8 @@
                 lastRunConfig: null,
                 selectedConceptIds: [],
                 lastSelectedConceptIndex: null,
+                isRunning: false,
+                lastApiResponse: null,
             };
 
             function $(id) {
@@ -1748,9 +1276,10 @@
 
             function updateLoadedStatus() {
                 const ds = $("dataset").value || "—";
-                const task = $("task").value || "—";
+                const { task } = getCurrent();
+                const taskId = task?.id || state.selectedTaskMode || "—";
                 const model = DATA?.meta?.model_checkpoint || "default";
-                $("loadedStatus").textContent = `${model}, ${ds}, ${task}`;
+                $("loadedStatus").textContent = `${model}, ${ds}, ${taskId}`;
             }
 
             function updateSankey() {
@@ -1818,25 +1347,22 @@
             }
 
             function getSnapAlpha(intervention) {
-                const alpha = parseFloat($("alpha").value);
-                const i = nearestIndex(intervention.alphas || [0], alpha);
-                return (intervention.alphas || [0])[i] ?? 0;
+                const alphas = intervention?.alphas || [0];
+                const i = nearestIndex(alphas, 0.5);
+                return alphas[i] ?? 0;
             }
 
             function getCurrent() {
                 const dsId = $("dataset").value;
-                const taskId = $("task").value;
-                const intId = $("intervention").value;
-
                 const ds =
                     DATA.datasets.find((d) => d.id === dsId) ||
                     DATA.datasets[0];
+                const tasks = ds.tasks || [];
                 const task =
-                    (ds.tasks || []).find((t) => t.id === taskId) ||
-                    (ds.tasks || [])[0];
-                const intervention =
-                    (task.interventions || []).find((i) => i.id === intId) ||
-                    (task.interventions || [])[0];
+                    tasks.find((t) =>
+                        String(t.id || "").includes(state.selectedTaskMode),
+                    ) || tasks[0];
+                const intervention = (task?.interventions || [])[0];
 
                 return { ds, task, intervention };
             }
@@ -1860,82 +1386,329 @@
                 return String(v);
             }
 
-            function buildChart() {
-                const ctx = $("tradeoffChart");
-                const { task, intervention } = getCurrent();
-                if (!task || !intervention) return;
+            function normalizeDatasetId(dsId) {
+                const allowed = new Set([
+                    "sst2",
+                    "SetFit/sst2",
+                    "ag_news",
+                    "yelp_polarity",
+                    "dbpedia_14",
+                ]);
+                if (allowed.has(dsId)) return dsId;
+                if (dsId === "sst2") return "sst2";
+                return "sst2";
+            }
 
-                const { pm, arr: primaryArr } = getPrimaryMetric(
-                    task,
-                    intervention,
-                );
-                const steerArr = intervention.steering || [];
+            function deriveModelId(taskMode) {
+                const ckpt = String(
+                    DATA?.meta?.model_checkpoint || "",
+                ).toLowerCase();
+                if (ckpt.includes("llama3")) return "llama3";
+                if (ckpt.includes("gpt2")) return "gpt2";
+                if (ckpt.includes("roberta")) return "roberta";
+                return taskMode === "generation" ? "gpt2" : "roberta";
+            }
 
-                const points = (intervention.alphas || []).map((a, i) => ({
-                    x: steerArr[i],
-                    y: primaryArr ? primaryArr[i] : undefined,
-                    alpha: a,
-                }));
+            function buildInterventionPayload() {
+                const activation = state.interventions.activation || {};
+                const weights = state.interventions.weights || {};
+                const activationKeys = Object.keys(activation);
+                const weightKeys = Object.keys(weights);
+                const hasActivation = activationKeys.length > 0;
+                const hasWeight = weightKeys.length > 0;
 
-                if (chart) chart.destroy();
+                let mechanism = "activation";
+                if (hasActivation && hasWeight) mechanism = "hybrid";
+                else if (hasWeight) mechanism = "weight";
 
-                chart = new Chart(ctx, {
-                    type: "line",
-                    data: {
-                        datasets: [
-                            {
-                                label: `Steering vs ${pm.name}`,
-                                data: points,
-                                parsing: false,
-                                pointRadius: 4,
-                                pointHoverRadius: 6,
-                                tension: 0.25,
-                            },
-                        ],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: true },
-                            tooltip: {
-                                callbacks: {
-                                    label: (c) => {
-                                        const p = c.raw;
-                                        const a = Number(p.alpha);
-                                        const alphaStr = Number.isFinite(a)
-                                            ? a.toFixed(2)
-                                            : String(p.alpha);
-                                        const steerStr =
-                                            p.x != null
-                                                ? Number(p.x).toFixed(2)
-                                                : "—";
-                                        const yStr =
-                                            p.y != null
-                                                ? formatPrimaryValue(pm, p.y)
-                                                : "—";
-                                        return `α=${alphaStr} | steering=${steerStr} | ${pm.name}=${yStr}`;
-                                    },
-                                },
-                            },
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: "Steering score",
-                                },
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text:
-                                        task.primary_metric?.name || "Accuracy",
-                                },
-                            },
-                        },
-                    },
+                const perConceptActivation = {};
+                activationKeys.forEach((id) => {
+                    const item = activation[id] || {};
+                    perConceptActivation[id] = {
+                        op: item.op || "add",
+                        value: Number(item.value || 0),
+                        relu_after: Boolean(item.reluAfter),
+                    };
                 });
+
+                const perConceptWeight = {};
+                weightKeys.forEach((id) => {
+                    const item = weights[id] || {};
+                    perConceptWeight[id] = {
+                        action: item.type || "scale",
+                        value: Number(item.value || 0),
+                    };
+                });
+
+                return {
+                    enabled: hasActivation || hasWeight,
+                    mechanism,
+                    target_concepts: Array.from(
+                        new Set([...activationKeys, ...weightKeys]),
+                    ),
+                    activation: hasActivation
+                        ? { per_concept: perConceptActivation }
+                        : undefined,
+                    weight: hasWeight
+                        ? { per_concept: perConceptWeight }
+                        : undefined,
+                    generation_policy: {
+                        mode: "static",
+                        apply_every_step: true,
+                    },
+                };
+            }
+
+            function buildRunRequest(runMode) {
+                const taskMode = state.selectedTaskMode;
+                const datasetId = normalizeDatasetId(
+                    $("dataset").value || "sst2",
+                );
+                const taskId =
+                    taskMode === "generation" ? "generation" : "classification";
+                const requestId =
+                    "req_" +
+                    Date.now() +
+                    "_" +
+                    Math.random().toString(36).slice(2, 8);
+                const inputText =
+                    taskMode === "generation"
+                        ? $("genPrompt").value
+                        : $("inputText").value;
+
+                return {
+                    request_id: requestId,
+                    run_mode: runMode,
+                    context: {
+                        task_mode: taskMode,
+                        dataset_id: datasetId,
+                        task_id: taskId,
+                        model_id: deriveModelId(taskMode),
+                        model_checkpoint: DATA?.meta?.model_checkpoint || null,
+                    },
+                    input: {
+                        text: inputText || "",
+                        true_label:
+                            ($("trueLabel").value || "").trim() || undefined,
+                    },
+                    intervention: buildInterventionPayload(),
+                    generation: {
+                        max_tokens: Number($("decodeMaxTokens").value || 128),
+                        temperature: Number(
+                            $("decodeTemperature").value || 0.7,
+                        ),
+                        top_p: Number($("decodeTopP").value || 0.9),
+                        seed: Number($("decodeSeed").value || 7),
+                    },
+                    response_options: {
+                        include_evidence: true,
+                        include_top_concepts: true,
+                        include_token_time_evidence: taskMode === "generation",
+                        top_k_concepts: 10,
+                    },
+                };
+            }
+
+            function setRunLoading(flag) {
+                state.isRunning = flag;
+                [
+                    "runBaselineBtn",
+                    "runIntervenedBtn",
+                    "compareBtn",
+                    "sendToModelBtn",
+                    "generateBtn",
+                ].forEach((id) => {
+                    const el = $(id);
+                    if (el) el.disabled = flag;
+                });
+                if (flag) {
+                    $("baselineMeta").textContent = "Running request...";
+                    $("intervenedMeta").textContent = "Running request...";
+                }
+            }
+
+            function clearApiBanners() {
+                $("apiWarningBanner").style.display = "none";
+                $("apiWarningBanner").textContent = "";
+                $("apiErrorBanner").style.display = "none";
+                $("apiErrorBanner").textContent = "";
+            }
+
+            function renderWarnings(warnings) {
+                const banner = $("apiWarningBanner");
+                if (Array.isArray(warnings) && warnings.length) {
+                    banner.style.display = "block";
+                    banner.textContent = warnings.join("\n");
+                } else {
+                    banner.style.display = "none";
+                    banner.textContent = "";
+                }
+            }
+
+            function renderApiError(err) {
+                const code = err?.code || "REQUEST_FAILED";
+                const message = err?.message || "Unknown backend error";
+                const details =
+                    Array.isArray(err?.details) && err.details.length
+                        ? `\n${JSON.stringify(err.details, null, 2)}`
+                        : "";
+                const banner = $("apiErrorBanner");
+                banner.style.display = "block";
+                banner.textContent = `${code}: ${message}${details}`;
+            }
+
+            function formatProbabilities(probabilities) {
+                if (!probabilities || typeof probabilities !== "object")
+                    return "—";
+                const entries = Object.entries(probabilities).sort(
+                    (a, b) => Number(b[1]) - Number(a[1]),
+                );
+                if (!entries.length) return "—";
+                return entries
+                    .map(
+                        ([label, p]) =>
+                            `${label}: ${(Number(p) * 100).toFixed(1)}%`,
+                    )
+                    .join(", ");
+            }
+
+            function renderResultCard(result, target) {
+                if (!result || !result.output) return;
+                const cls = result.output.classification;
+                if (cls) {
+                    const body = [
+                        `Predicted label: ${cls.predicted_label || "—"}`,
+                        `Confidence: ${Number(cls.confidence ?? 0).toFixed(4)}`,
+                        `Class probabilities: ${formatProbabilities(cls.probabilities)}`,
+                    ].join(" | ");
+                    if (target === "baseline") {
+                        $("baselineText").textContent = body;
+                        $("baselineMeta").textContent =
+                            result.output.text || "Classification result";
+                    } else {
+                        $("intervenedText").textContent = body;
+                        $("intervenedMeta").textContent =
+                            result.output.text || "Classification result";
+                    }
+                    return;
+                }
+
+                const fallbackText =
+                    result.output.text || "No output returned.";
+                if (target === "baseline") {
+                    $("baselineText").textContent = fallbackText;
+                    $("baselineMeta").textContent =
+                        "No classification payload.";
+                } else {
+                    $("intervenedText").textContent = fallbackText;
+                    $("intervenedMeta").textContent =
+                        "No classification payload.";
+                }
+            }
+
+            function renderVisibleModelOutput(result, label) {
+                const textEl = $("modelOutputText");
+                const metaEl = $("modelOutputMeta");
+                if (!textEl || !metaEl) return;
+                if (!result || !result.output) {
+                    textEl.textContent = "Run the model to view output.";
+                    metaEl.textContent = "No response yet.";
+                    return;
+                }
+
+                const cls = result.output.classification;
+                if (cls) {
+                    textEl.textContent = [
+                        `Predicted label: ${cls.predicted_label || "—"}`,
+                        `Confidence: ${Number(cls.confidence ?? 0).toFixed(4)}`,
+                        `Class probabilities: ${formatProbabilities(cls.probabilities)}`,
+                    ].join(" | ");
+                } else {
+                    textEl.textContent = result.output.text || "No output returned.";
+                }
+                metaEl.textContent = label || "Latest response";
+            }
+
+            function renderTopConceptsFromResponse(runResult) {
+                const body = $("evidenceTableBody");
+                body.innerHTML = "";
+                const list = runResult?.evidence?.top_concepts || [];
+                if (!Array.isArray(list) || !list.length) return;
+                list.forEach((item) => {
+                    const tr = document.createElement("tr");
+                    const tdName = document.createElement("td");
+                    tdName.textContent =
+                        item.concept_name || item.concept_id || "—";
+                    const tdAct = document.createElement("td");
+                    tdAct.textContent = Number.isFinite(Number(item.activation))
+                        ? Number(item.activation).toFixed(3)
+                        : "—";
+                    const tdWeight = document.createElement("td");
+                    tdWeight.textContent = "—";
+                    const tdContrib = document.createElement("td");
+                    tdContrib.textContent = "—";
+                    tr.appendChild(tdName);
+                    tr.appendChild(tdAct);
+                    tr.appendChild(tdWeight);
+                    tr.appendChild(tdContrib);
+                    body.appendChild(tr);
+                });
+            }
+
+            function renderRunResponse(response, runMode) {
+                state.lastApiResponse = response;
+                renderWarnings(response?.warnings || []);
+                if (runMode === "baseline") {
+                    state.baselineResult = response?.baseline || null;
+                    renderResultCard(response?.baseline, "baseline");
+                    renderVisibleModelOutput(response?.baseline, "Baseline");
+                    renderTopConceptsFromResponse(response?.baseline);
+                    return;
+                }
+                if (runMode === "intervened") {
+                    state.intervenedResult = response?.intervened || null;
+                    renderResultCard(response?.intervened, "intervened");
+                    renderVisibleModelOutput(response?.intervened, "Intervened");
+                    renderTopConceptsFromResponse(response?.intervened);
+                    return;
+                }
+                state.baselineResult = response?.baseline || null;
+                state.intervenedResult = response?.intervened || null;
+                renderResultCard(response?.baseline, "baseline");
+                renderResultCard(response?.intervened, "intervened");
+                renderVisibleModelOutput(
+                    response?.intervened || response?.baseline,
+                    response?.intervened ? "Intervened (compare)" : "Baseline (compare)",
+                );
+                renderTopConceptsFromResponse(
+                    response?.intervened || response?.baseline,
+                );
+            }
+
+            async function runWithApi(runMode) {
+                clearApiBanners();
+                setRunLoading(true);
+                try {
+                    if (
+                        !window.CbllmApi ||
+                        typeof window.CbllmApi.postRun !== "function"
+                    ) {
+                        throw {
+                            code: "API_CLIENT_UNAVAILABLE",
+                            message: "API client failed to load.",
+                        };
+                    }
+                    const payload = buildRunRequest(runMode);
+                    const response = await window.CbllmApi.postRun(payload);
+                    console.log("CB-LLM backend response:", response);
+                    renderRunResponse(response, runMode);
+                    setPendingChanges(false);
+                } catch (err) {
+                    renderApiError(err);
+                } finally {
+                    setRunLoading(false);
+                    updateRecipeViews();
+                }
             }
 
             function renderTopConcepts(intervention, snapAlpha) {
@@ -1953,13 +1726,8 @@
                 }
                 empty.style.display = "none";
 
-                const classView = $("classView").value;
                 const classNames = Object.keys(block);
-
-                const classesToRender =
-                    classView && classView !== "__all__"
-                        ? classNames.filter((c) => c === classView)
-                        : classNames;
+                const classesToRender = classNames;
 
                 // collect max for scaling bars (per class)
                 for (const cls of classesToRender) {
@@ -2160,21 +1928,14 @@
                     intervention.top_concepts_by_class[alphaKey];
                 if (!block || typeof block !== "object") return;
 
-                const classView = $("classView").value;
                 const classNames = Object.keys(block);
-                const classesToRender =
-                    classView && classView !== "__all__"
-                        ? classNames.filter((c) => c === classView)
-                        : classNames;
+                const classesToRender = classNames;
 
-                const onlyIntervened = $("onlyIntervenedFilter").checked;
                 const rows = [];
 
                 classesToRender.forEach((cls) => {
                     const items = Array.isArray(block[cls]) ? block[cls] : [];
                     items.forEach((item) => {
-                        const id = String(item.name ?? "—");
-                        if (onlyIntervened && !isConceptIntervened(id)) return;
                         rows.push({
                             name: item.name ?? "—",
                             activation: "—",
@@ -2347,8 +2108,10 @@
             function updateRecipeViews() {
                 const recipe = buildRecipe();
                 const json = JSON.stringify(recipe, null, 2);
-                $("recipeJson").value = json;
-                $("recipeFooter").textContent = json;
+                const recipeJsonEl = $("recipeJson");
+                if (recipeJsonEl) recipeJsonEl.value = json;
+                const recipeFooterEl = $("recipeFooter");
+                if (recipeFooterEl) recipeFooterEl.textContent = json;
                 updateReproducibilityInfo();
             }
 
@@ -2393,50 +2156,40 @@
                 }
             }
 
-            function runBaseline() {
-                const { task, intervention } = getCurrent();
-                const res = buildResult(task, intervention, 0);
-                state.baselineResult = res;
-                applyResultToUI(res, "baseline");
-                updateRecipeViews();
+            async function runBaseline() {
+                await runWithApi("baseline");
             }
 
-            function runIntervened() {
-                const { task, intervention } = getCurrent();
-                const alpha = parseFloat($("alpha").value);
-                const res = buildResult(task, intervention, alpha);
-                state.intervenedResult = res;
-                applyResultToUI(res, "intervened");
-                updateRecipeViews();
+            async function runIntervened() {
+                await runWithApi("intervened");
             }
 
-            function runCompare() {
-                if (!state.isBaselineLocked || !state.baselineResult) {
-                    runBaseline();
-                }
-                runIntervened();
+            async function runCompare() {
+                await runWithApi("compare");
             }
 
             function resetResults() {
                 state.baselineResult = null;
                 state.intervenedResult = null;
+                state.lastApiResponse = null;
                 $("baselineText").textContent = "No baseline run yet.";
                 $("baselineMeta").textContent = "Run baseline to see outputs.";
                 $("intervenedText").textContent = "No intervened run yet.";
                 $("intervenedMeta").textContent =
                     "Run with intervention to see outputs.";
+                const outputText = $("modelOutputText");
+                const outputMeta = $("modelOutputMeta");
+                if (outputText) outputText.textContent = "Run the model to view output.";
+                if (outputMeta) outputMeta.textContent = "No response yet.";
+                clearApiBanners();
             }
 
             function updateUI() {
                 const { task, intervention } = getCurrent();
                 if (!task || !intervention) return;
 
-                const alpha = parseFloat($("alpha").value);
-                $("alphaVal").textContent = alpha.toFixed(2);
-
-                const i = nearestIndex(intervention.alphas || [0], alpha);
+                const i = nearestIndex(intervention.alphas || [0], 0.5);
                 const snapAlpha = (intervention.alphas || [0])[i] ?? 0;
-                $("alphaSnap").textContent = Number(snapAlpha).toFixed(2);
                 const alphaText = Number(snapAlpha).toFixed(2);
                 document.querySelectorAll(".exAlphaText").forEach((el) => {
                     el.textContent = alphaText;
@@ -2501,9 +2254,6 @@
                     $("exAfter").textContent = snappedEx.after || "—";
                 else $("exAfter").textContent = "—";
 
-                populateExampleSelectors(intervention);
-                syncInputsFromExample(intervention, baselineEx);
-
                 // Concepts
                 renderTopConcepts(intervention, snapAlpha);
 
@@ -2512,69 +2262,30 @@
                 renderConceptList();
                 renderEvidenceTable(intervention, snapAlpha);
 
-                $("baselineLockedStatus").textContent = state.isBaselineLocked
-                    ? "true"
-                    : "false";
+                const baselineLockedEl = $("baselineLockedStatus");
+                if (baselineLockedEl) {
+                    baselineLockedEl.textContent = state.isBaselineLocked
+                        ? "true"
+                        : "false";
+                }
                 updateLoadedStatus();
                 updateReproducibilityInfo();
             }
 
-            function syncInputsFromExample(intervention, baselineEx) {
-                const useCustom = $("useCustomText").checked;
-                const genCustom = $("genUseCustomText").checked;
-                const ex = intervention.examples || {};
-                const selectedKey =
-                    $("exampleSelect").value || normalizeAlphaKey(0);
-                const selected = ex[selectedKey] || baselineEx;
-                const prompt =
-                    intervention.prompt || (selected && selected.before) || "";
-                if (!useCustom) $("inputText").value = prompt;
-                if (!genCustom)
-                    $("genPrompt").value = intervention.prompt || prompt;
-            }
-
-            function populateExampleSelectors(intervention) {
-                const ex = intervention.examples || {};
-                const keys = Object.keys(ex);
-                const opts = keys.length ? keys : ["0"];
-                const currentOpts = Array.from($("exampleSelect").options).map(
-                    (o) => o.value,
-                );
-                const currentGenOpts = Array.from(
-                    $("genExampleSelect").options,
-                ).map((o) => o.value);
-                if (currentOpts.join("|") !== opts.join("|")) {
-                    setSelectOptions(
-                        $("exampleSelect"),
-                        opts,
-                        (o) => o,
-                        (o) => `Example α=${o}`,
-                    );
-                }
-                if (currentGenOpts.join("|") !== opts.join("|")) {
-                    setSelectOptions(
-                        $("genExampleSelect"),
-                        opts,
-                        (o) => o,
-                        (o) => `Example α=${o}`,
-                    );
-                }
-                $("exampleMeta").textContent =
-                    `Loaded ${opts.length} example(s)`;
-                $("genExampleMeta").textContent =
-                    `Loaded ${opts.length} example(s)`;
-            }
-
             function updateReproducibilityInfo() {
                 const dsId = $("dataset").value || "—";
-                const taskId = $("task").value || "—";
+                const { task } = getCurrent();
+                const taskId = task?.id || state.selectedTaskMode || "—";
                 const model = DATA?.meta?.model_checkpoint || "default";
                 const maxTokens = $("decodeMaxTokens").value;
                 const temp = $("decodeTemperature").value;
                 const topP = $("decodeTopP").value;
                 const seed = $("decodeSeed").value;
-                $("reproducibilityInfo").textContent =
-                    `dataset: ${dsId} | task: ${taskId} | model: ${model} | max_tokens: ${maxTokens} | temperature: ${temp} | top_p: ${topP} | seed: ${seed}`;
+                const reproducibilityEl = $("reproducibilityInfo");
+                if (reproducibilityEl) {
+                    reproducibilityEl.textContent =
+                        `dataset: ${dsId} | task: ${taskId} | model: ${model} | max_tokens: ${maxTokens} | temperature: ${temp} | top_p: ${topP} | seed: ${seed}`;
+                }
             }
 
             function rebuildTaskInterventions() {
@@ -2582,103 +2293,24 @@
                 const ds =
                     DATA.datasets.find((d) => d.id === dsId) ||
                     DATA.datasets[0];
-
-                // tasks
                 const tasks = ds.tasks || [];
-                setSelectOptions(
-                    $("task"),
-                    tasks,
-                    (t) => t.id,
-                    (t) => t.name,
-                );
-
-                // interventions from selected task
-                const taskId = $("task").value;
-                const task = tasks.find((t) => t.id === taskId) || tasks[0];
-
-                const interventions =
-                    task && task.interventions ? task.interventions : [];
-                setSelectOptions(
-                    $("intervention"),
-                    interventions,
-                    (i) => i.id,
-                    (i) => i.name,
-                );
+                const task =
+                    tasks.find((t) =>
+                        String(t.id || "").includes(state.selectedTaskMode),
+                    ) || tasks[0];
 
                 const mode = (task?.id || "").includes("generation")
                     ? "generation"
                     : "classification";
                 setTaskMode(mode);
 
-                // class list for concept view (based on currently selected intervention; update again after selection)
-                buildClassViewOptions();
-
-                buildChart();
                 resetResults();
                 setPendingChanges(false);
                 updateUI();
             }
 
-            function buildClassViewOptions() {
-                const { intervention } = getCurrent();
-                const sel = $("classView");
-                const options = [{ id: "__all__", name: "All classes" }];
-
-                // best-effort gather class names across alpha keys
-                const tcbc = intervention && intervention.top_concepts_by_class;
-                if (tcbc && typeof tcbc === "object") {
-                    const classSet = new Set();
-                    for (const aKey of Object.keys(tcbc)) {
-                        const block = tcbc[aKey];
-                        if (block && typeof block === "object") {
-                            Object.keys(block).forEach((c) => classSet.add(c));
-                        }
-                    }
-                    for (const c of Array.from(classSet).sort()) {
-                        options.push({ id: c, name: c });
-                    }
-                }
-
-                setSelectOptions(
-                    sel,
-                    options,
-                    (o) => o.id,
-                    (o) => o.name,
-                );
-            }
-
             function onDatasetChange() {
                 rebuildTaskInterventions();
-            }
-
-            function onTaskChange() {
-                // rebuild intervention list for task
-                const { ds } = getCurrent();
-                const taskId = $("task").value;
-                const task =
-                    (ds.tasks || []).find((t) => t.id === taskId) ||
-                    (ds.tasks || [])[0];
-                setSelectOptions(
-                    $("intervention"),
-                    task?.interventions || [],
-                    (i) => i.id,
-                    (i) => i.name,
-                );
-                buildClassViewOptions();
-                const mode = (task?.id || "").includes("generation")
-                    ? "generation"
-                    : "classification";
-                setTaskMode(mode);
-                buildChart();
-                resetResults();
-                updateUI();
-            }
-
-            function onInterventionChange() {
-                buildClassViewOptions();
-                buildChart();
-                resetResults();
-                updateUI();
             }
 
             function setStatus(ok, msg, source) {
@@ -2694,33 +2326,12 @@
             async function loadData() {
                 $("codeRepoLink").href = CODE_REPO_URL;
 
-                // default to sample until fetch succeeds
-                DATA = SAMPLE_DATA;
-
-                try {
-                    const res = await fetch("results/metrics.json", {
-                        cache: "no-store",
-                    });
-                    if (!res.ok) throw new Error("metrics.json not found");
-                    const json = await res.json();
-
-                    // minimal validation to prevent hard crash
-                    if (!json || !Array.isArray(json.datasets))
-                        throw new Error("Invalid metrics.json schema");
-
-                    DATA = json;
-                    setStatus(
-                        true,
-                        "Loaded metrics.json",
-                        "results/metrics.json",
-                    );
-                } catch (e) {
-                    setStatus(
-                        false,
-                        "Using SAMPLE_DATA fallback",
-                        "embedded sample",
-                    );
-                }
+                DATA = API_CATALOG;
+                setStatus(
+                    true,
+                    "API mode enabled",
+                    "POST /api/v1/run",
+                );
 
                 if (DATA.meta && DATA.meta.code_repo) {
                     $("codeRepoLink").href = DATA.meta.code_repo;
@@ -2734,26 +2345,17 @@
                     (d) => d.name,
                 );
 
-                // Initialize task/intervention selects
+                // Initialize task/intervention context
                 rebuildTaskInterventions();
 
                 // listeners
                 $("dataset").addEventListener("change", onDatasetChange);
-                $("task").addEventListener("change", onTaskChange);
-                $("intervention").addEventListener(
-                    "change",
-                    onInterventionChange,
-                );
-                $("classView").addEventListener("change", updateUI);
-                $("alpha").addEventListener("input", updateUI);
                 $("conceptSearch").addEventListener("input", renderConceptList);
                 $("conceptSort").addEventListener("change", renderConceptList);
                 $("conceptList").addEventListener(
                     "click",
                     handleConceptSelection,
                 );
-                $("onlyIntervenedFilter").addEventListener("change", updateUI);
-
                 $("applyActivationBtn").addEventListener(
                     "click",
                     applyActivationIntervention,
@@ -2792,75 +2394,25 @@
 
                 $("lockBaseline").addEventListener("change", (e) => {
                     state.isBaselineLocked = e.target.checked;
-                    $("baselineLockedStatus").textContent =
-                        state.isBaselineLocked ? "true" : "false";
-                });
-
-                $("saveRecipeBtn").addEventListener("click", updateRecipeViews);
-                $("loadRecipeBtn").addEventListener("click", () => {
-                    try {
-                        const recipe = JSON.parse(
-                            $("recipeJson").value || "{}",
-                        );
-                        applyRecipe(recipe);
-                    } catch (e) {
-                        $("recipeJson").value = "Invalid JSON";
-                    }
-                });
-                $("copyRecipeBtn").addEventListener("click", async () => {
-                    try {
-                        await navigator.clipboard.writeText(
-                            $("recipeJson").value || "",
-                        );
-                    } catch (e) {
-                        // clipboard may be blocked; ignore
+                    const baselineLockedEl = $("baselineLockedStatus");
+                    if (baselineLockedEl) {
+                        baselineLockedEl.textContent = state.isBaselineLocked
+                            ? "true"
+                            : "false";
                     }
                 });
 
                 $("taskMode").addEventListener("change", (e) => {
                     const mode = e.target.value;
                     setTaskMode(mode);
-                    const ds =
-                        DATA.datasets.find(
-                            (d) => d.id === $("dataset").value,
-                        ) || DATA.datasets[0];
-                    const match = (ds.tasks || []).find((t) =>
-                        t.id.includes(mode),
-                    );
-                    if (match) {
-                        $("task").value = match.id;
-                        onTaskChange();
-                    }
+                    rebuildTaskInterventions();
                 });
 
                 document.querySelectorAll(".tab-btn").forEach((btn) => {
-                    btn.addEventListener("click", () =>
-                        setTaskMode(btn.dataset.tab),
-                    );
-                });
-
-                $("exampleSelect").addEventListener("change", updateUI);
-                $("genExampleSelect").addEventListener("change", updateUI);
-                $("useCustomText").addEventListener("change", updateUI);
-                $("genUseCustomText").addEventListener("change", updateUI);
-
-                $("randomExampleBtn").addEventListener("click", () => {
-                    const opts = Array.from($("exampleSelect").options);
-                    const choice =
-                        opts[Math.floor(Math.random() * opts.length)];
-                    if (choice) {
-                        $("exampleSelect").value = choice.value;
-                        updateUI();
-                    }
-                });
-                $("randomGenExampleBtn").addEventListener("click", () => {
-                    const opts = Array.from($("genExampleSelect").options);
-                    const choice =
-                        opts[Math.floor(Math.random() * opts.length)];
-                    if (choice) {
-                        $("genExampleSelect").value = choice.value;
-                        updateUI();
-                    }
+                    btn.addEventListener("click", () => {
+                        setTaskMode(btn.dataset.tab);
+                        rebuildTaskInterventions();
+                    });
                 });
 
                 $("sendToModelBtn").addEventListener("click", runCompare);
