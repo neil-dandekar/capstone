@@ -1,0 +1,18 @@
+fastapi>=0.110.0
+uvicorn>=0.27.0
+pytest>=8.0.0
+httpx>=0.27.0
+
+# Inference/runtime deps used by backend_api/{classification,generation}.py
+transformers==4.44.0
+datasets==3.0.2
+peft==0.13.2
+evaluate==0.4.3
+numpy==1.26.4
+scikit-learn==1.5.2
+
+# PyTorch pin compatible with Python version:
+# - 2.4.0 for Python <=3.12 (matches original repo setup)
+# - 2.6+ for Python 3.13 where 2.4.0 wheels are unavailable
+torch==2.4.0; python_version < "3.13"
+torch>=2.6,<2.11; python_version >= "3.13"
