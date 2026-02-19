@@ -1,2437 +1,485 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Capstone Project | Neuron Intervention Demo</title>
-        <meta
-            name="description"
-            content="Interactive capstone demo: neuron-level interventions in Concept Bottleneck LLMs with accuracy vs steerability tradeoffs."
-        />
-
-        <link rel="stylesheet" href="style.css" />
-        <script src="api/client.js"></script>
-
-        <style>
-            @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
-
-            :root {
-                --bg: #0b0f17;
-                --card: #121a29;
-                --text: #e7eefc;
-                --muted: #a9b6d3;
-                --border: rgba(255, 255, 255, 0.1);
-                --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-                --radius: 16px;
-                --danger: #ff6b6b;
-                --ok: #6ee7b7;
-            }
-
-            body {
-                margin: 0;
-                font-family:
-                    "Space Grotesk",
-                    system-ui,
-                    -apple-system,
-                    Segoe UI,
-                    Roboto,
-                    Arial,
-                    sans-serif;
-                background:
-                    radial-gradient(
-                        1200px 800px at 15% 10%,
-                        rgba(99, 102, 241, 0.2),
-                        transparent 60%
-                    ),
-                    radial-gradient(
-                        900px 700px at 85% 20%,
-                        rgba(34, 197, 94, 0.14),
-                        transparent 55%
-                    ),
-                    var(--bg);
-                color: var(--text);
-            }
-
-            a {
-                color: inherit;
-            }
-
-            .wrap {
-                max-width: 1180px;
-                margin: 0 auto;
-                padding: 48px 20px 80px;
-            }
-
-            header {
-                display: grid;
-                gap: 10px;
-                margin-bottom: 22px;
-            }
-
-            h1 {
-                margin: 0;
-                letter-spacing: -0.02em;
-                font-size: clamp(30px, 4vw, 46px);
-                line-height: 1.1;
-            }
-
-            .sub {
-                margin: 0;
-                color: var(--muted);
-                max-width: 80ch;
-                font-size: 16.5px;
-                line-height: 1.55;
-            }
-
-            .section {
-                margin-top: 18px;
-            }
-
-            .card {
-                background: rgba(18, 26, 41, 0.82);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                box-shadow: var(--shadow);
-                padding: 18px;
-                backdrop-filter: blur(10px);
-            }
-
-            .card h2 {
-                margin: 0 0 10px;
-                font-size: 20px;
-                letter-spacing: -0.01em;
-            }
-
-            .card p {
-                margin: 10px 0 0;
-                color: var(--muted);
-                line-height: 1.6;
-                font-size: 15px;
-            }
-
-            .section-head {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 16px;
-                flex-wrap: wrap;
-                margin-bottom: 14px;
-            }
-
-            .section-head h2 {
-                margin: 0;
-                font-size: 22px;
-            }
-
-            .row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-            }
-
-            @media (max-width: 650px) {
-                .row {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            label {
-                display: block;
-                font-size: 13.5px;
-                color: var(--muted);
-                margin-bottom: 6px;
-            }
-
-            select,
-            input[type="range"],
-            input[type="text"],
-            input[type="number"],
-            textarea {
-                width: 100%;
-            }
-
-            select {
-                background: rgba(255, 255, 255, 0.06);
-                color: var(--text);
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                padding: 11px 12px;
-                outline: none;
-                font-size: 15px;
-            }
-
-            input[type="text"],
-            input[type="number"],
-            textarea {
-                background: rgba(255, 255, 255, 0.06);
-                color: var(--text);
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                padding: 10px 12px;
-                outline: none;
-                font-size: 15px;
-                font-family: inherit;
-            }
-
-            textarea {
-                min-height: 110px;
-                resize: vertical;
-            }
-
-            .panel-grid {
-                display: grid;
-                grid-template-columns: 1.15fr 0.85fr;
-                gap: 16px;
-                align-items: start;
-            }
-
-            @media (max-width: 980px) {
-                .panel-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .panel-col {
-                display: grid;
-                gap: 14px;
-            }
-
-            .toolbar {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                align-items: center;
-            }
-
-            .btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border: 1px solid var(--border);
-                background: rgba(255, 255, 255, 0.04);
-                padding: 9px 12px;
-                border-radius: 12px;
-                text-decoration: none;
-                font-size: 13.5px;
-                color: var(--text);
-                cursor: pointer;
-            }
-
-            .btn.primary {
-                background: rgba(99, 102, 241, 0.25);
-                border-color: rgba(99, 102, 241, 0.6);
-            }
-
-            .btn.ghost {
-                background: transparent;
-            }
-
-            .btn:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-
-            .kpis {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-                margin-top: 12px;
-            }
-
-            @media (max-width: 520px) {
-                .kpis {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .kpi {
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.04);
-            }
-
-            .kpi .name {
-                color: var(--muted);
-                font-size: 13px;
-                margin-bottom: 6px;
-            }
-
-            .kpi .val {
-                font-size: 22px; /* larger KPI */
-                font-weight: 700;
-                letter-spacing: -0.01em;
-            }
-
-            .pill {
-                display: inline-flex;
-                gap: 8px;
-                align-items: center;
-                border: 1px solid var(--border);
-                border-radius: 999px;
-                padding: 7px 10px;
-                background: rgba(255, 255, 255, 0.04);
-                color: var(--muted);
-                font-size: 12.5px;
-            }
-
-            .pill b {
-                color: var(--text);
-                font-weight: 700;
-            }
-
-            .controls {
-                display: grid;
-                gap: 12px;
-            }
-
-            .sliderline {
-                display: grid;
-                grid-template-columns: 1fr auto;
-                gap: 10px;
-                align-items: center;
-            }
-
-            .mono {
-                font-family:
-                    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-                    "Liberation Mono", monospace;
-            }
-
-            .examples {
-                margin-top: 12px;
-                display: grid;
-                gap: 10px;
-            }
-
-            .ex {
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.04);
-            }
-
-            .ex .hdr {
-                display: flex;
-                justify-content: space-between;
-                align-items: baseline;
-                gap: 10px;
-                margin-bottom: 8px;
-            }
-
-            .ex .hdr .tag {
-                color: var(--muted);
-                font-size: 13px;
-            }
-
-            .ex .txt {
-                margin: 0;
-                line-height: 1.55;
-                font-size: 15px; /* larger examples */
-                color: var(--text);
-            }
-
-            .footlinks {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                margin-top: 10px;
-            }
-
-            .hint {
-                margin-top: 10px;
-                font-size: 12.5px;
-                color: var(--muted);
-            }
-
-            canvas {
-                width: 100% !important;
-                height: 340px !important;
-            }
-
-            /* Status line for backend/API connectivity */
-            .statusline {
-                margin-top: 10px;
-                font-size: 13px;
-                color: var(--muted);
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-            .dot {
-                width: 9px;
-                height: 9px;
-                border-radius: 999px;
-                display: inline-block;
-                background: rgba(255, 255, 255, 0.25);
-            }
-            .dot.ok {
-                background: var(--ok);
-            }
-            .dot.bad {
-                background: var(--danger);
-            }
-
-            /* ===== Top concepts panel (bigger fonts per your TODO) ===== */
-            .conceptsPanel {
-                margin-top: 12px;
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.04);
-            }
-
-            .conceptsHdr {
-                display: flex;
-                justify-content: space-between;
-                align-items: baseline;
-                gap: 10px;
-                margin-bottom: 10px;
-            }
-
-            .conceptsHdr .title {
-                font-size: 18px;
-                font-weight: 750;
-                letter-spacing: -0.01em;
-            }
-
-            .conceptsHdr .note {
-                color: var(--muted);
-                font-size: 13px;
-            }
-
-            .classBlock {
-                padding: 10px 10px 12px;
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                background: rgba(0, 0, 0, 0.1);
-                margin-top: 10px;
-            }
-
-            .className {
-                font-size: 18px; /* larger class name */
-                font-weight: 800;
-                margin: 0 0 10px;
-                letter-spacing: -0.01em;
-            }
-
-            .barRow {
-                display: grid;
-                grid-template-columns: 1fr auto;
-                gap: 10px;
-                align-items: center;
-                margin: 8px 0;
-            }
-
-            .barTrack {
-                position: relative;
-                height: 16px;
-                border-radius: 999px;
-                border: 1px solid var(--border);
-                background: rgba(255, 255, 255, 0.05);
-                overflow: hidden;
-            }
-
-            .barFill {
-                position: absolute;
-                top: 0;
-                left: 0;
-                height: 100%;
-                width: 0%;
-                background: rgba(99, 102, 241, 0.55);
-            }
-
-            .barLabel {
-                position: absolute;
-                top: 50%;
-                left: 10px;
-                transform: translateY(-50%);
-                font-size: 15px; /* larger concept name */
-                font-weight: 650;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: calc(100% - 12px);
-                color: var(--text);
-            }
-
-            .barVal {
-                font-size: 14px;
-                color: var(--muted);
-                min-width: 72px;
-                text-align: right;
-            }
-
-            .emptyMsg {
-                color: var(--muted);
-                font-size: 14px;
-                margin-top: 8px;
-            }
-
-            .concept-list {
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                background: rgba(0, 0, 0, 0.1);
-                max-height: 340px;
-                overflow: auto;
-            }
-
-            .concept-header {
-                display: grid;
-                grid-template-columns: 1.5fr 0.8fr 0.8fr auto;
-                gap: 8px;
-                font-size: 12px;
-                color: var(--muted);
-                padding: 0 6px 6px;
-            }
-
-            .concept-row {
-                display: grid;
-                grid-template-columns: 1.5fr 0.8fr 0.8fr auto;
-                gap: 8px;
-                padding: 10px 12px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                cursor: pointer;
-            }
-
-            .concept-row:last-child {
-                border-bottom: none;
-            }
-
-            .concept-row.selected {
-                background: rgba(99, 102, 241, 0.18);
-            }
-
-            .badge {
-                font-size: 11px;
-                padding: 2px 6px;
-                border-radius: 999px;
-                border: 1px solid var(--border);
-                color: var(--muted);
-            }
-
-            .tabs {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-                margin-bottom: 12px;
-            }
-
-            .tab-btn {
-                border: 1px solid var(--border);
-                border-radius: 999px;
-                padding: 7px 12px;
-                background: transparent;
-                color: var(--muted);
-                cursor: pointer;
-                font-size: 13.5px;
-            }
-
-            .tab-btn.active {
-                color: var(--text);
-                background: rgba(255, 255, 255, 0.08);
-            }
-
-            .tab-panel {
-                display: none;
-                gap: 12px;
-            }
-
-            .tab-panel.active {
-                display: grid;
-            }
-
-            .results-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 16px;
-            }
-
-            @media (max-width: 920px) {
-                .results-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .result-card {
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                padding: 14px;
-                background: rgba(255, 255, 255, 0.04);
-                display: grid;
-                gap: 10px;
-            }
-
-            .output-block {
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                padding: 12px;
-                background: rgba(0, 0, 0, 0.12);
-            }
-
-            .output-title {
-                font-size: 13px;
-                color: var(--muted);
-                margin-bottom: 6px;
-            }
-
-            .output-text {
-                font-size: 15px;
-                line-height: 1.55;
-                color: var(--text);
-                min-height: 60px;
-            }
-
-            .output-meta {
-                font-size: 12.5px;
-                color: var(--muted);
-            }
-
-            .evidence-grid {
-                margin-top: 16px;
-                display: grid;
-                gap: 14px;
-            }
-
-            .evidence-card {
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                padding: 14px;
-                background: rgba(255, 255, 255, 0.04);
-            }
-
-            .table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 13.5px;
-            }
-
-            .table th,
-            .table td {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                padding: 8px 6px;
-                text-align: left;
-            }
-
-            .table th {
-                color: var(--muted);
-                font-weight: 600;
-            }
-
-            .muted {
-                color: var(--muted);
-            }
-
-            .api-banner {
-                margin-top: 10px;
-                border-radius: 12px;
-                padding: 10px 12px;
-                font-size: 13.5px;
-                line-height: 1.4;
-                border: 1px solid transparent;
-                display: none;
-                white-space: pre-wrap;
-            }
-
-            .api-banner.warn {
-                background: rgba(245, 158, 11, 0.14);
-                border-color: rgba(245, 158, 11, 0.4);
-                color: #fcd34d;
-            }
-
-            .api-banner.error {
-                background: rgba(239, 68, 68, 0.14);
-                border-color: rgba(239, 68, 68, 0.45);
-                color: #fecaca;
-            }
-
-            .sankey-frame {
-                width: 100%;
-                height: 520px;
-                border: none;
-                border-radius: 12px;
-                background: #ffffff;
-            }
-
-            .sankey-frame--tall {
-                height: 1000px;
-            }
-        </style>
-    </head>
-
-    <body>
-        <div class="wrap">
-            <header>
-                <div class="pill">Interactive demo: <b>live backend API</b></div>
-
-                <h1>Concept Bottleneck LLM Intervention Console</h1>
-                <p class="sub">
-                    Edit concept-linked neurons, run baseline vs intervened, and
-                    inspect evidence. This UI is a researcher-focused shell over
-                    live CB-LLM backend responses.
-                </p>
-            </header>
-
-            <section class="card section" id="control-panel">
-                <div class="section-head">
-                    <h2>Concept Bottleneck Control Panel</h2>
-                    <div class="statusline">
-                        <span class="dot" id="dataDot"></span>
-                        <span id="dataStatus">Loading…</span>
-                        <span
-                            class="mono"
-                            id="dataSource"
-                            style="opacity: 0.8"
-                        ></span>
-                        <span class="pill"
-                            ><span id="pendingChanges"
-                                >No pending changes</span
-                            ></span
-                        >
-                    </div>
-                </div>
-
-                <div class="controls">
-                    <div class="row">
-                        <div>
-                            <label for="taskMode">Task Mode</label>
-                            <select id="taskMode">
-                                <option value="classification">
-                                    Classification
-                                </option>
-                                <option value="generation">Generation</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="dataset">Dataset</label>
-                            <select id="dataset"></select>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="panel-grid" style="margin-top: 16px">
-                    <div class="panel-col">
-                        <div class="card" style="padding: 14px">
-                            <h3 style="margin: 0 0 6px">Concept Browser</h3>
-                            <p class="muted" style="margin-top: 0">
-                                Search, sort, and select concepts for batch
-                                edits.
-                            </p>
-
-                            <div class="row" style="margin-top: 10px">
-                                <div>
-                                    <label for="conceptSearch"
-                                        >Search concepts…</label
-                                    >
-                                    <input
-                                        id="conceptSearch"
-                                        type="text"
-                                        placeholder="e.g., uplifting, diplomacy, optimism"
-                                    />
-                                </div>
-                                <div>
-                                    <label for="conceptSort">Sort</label>
-                                    <select id="conceptSort">
-                                        <option value="contribution">
-                                            By contribution
-                                        </option>
-                                        <option value="activation">
-                                            By activation
-                                        </option>
-                                        <option value="alpha">
-                                            Alphabetical
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div
-                                class="concept-header"
-                                style="margin-top: 12px"
-                            >
-                                <span>Concept</span>
-                                <span>Activation</span>
-                                <span>Intervened</span>
-                                <span>Status</span>
-                            </div>
-                            <div class="concept-list" id="conceptList"></div>
-                            <div class="statusline">
-                                <span class="pill"
-                                    >Selected: <b id="conceptCount">0</b></span
-                                >
-                                <span class="pill"
-                                    >Intervention active:
-                                    <b id="interventionCount">0</b></span
-                                >
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="panel-col">
-                        <div class="card" style="padding: 14px">
-                            <h3 style="margin: 0 0 6px">Intervention Editor</h3>
-                            <p class="muted" style="margin-top: 0">
-                                Edit activation and weight interventions for
-                                selected concepts.
-                            </p>
-
-                            <div class="controls">
-                                <div>
-                                    <label for="activationOp"
-                                        >Activation intervention</label
-                                    >
-                                    <div class="row">
-                                        <select id="activationOp">
-                                            <option value="add">
-                                                additive (Δ)
-                                            </option>
-                                            <option value="override">
-                                                override (v)
-                                            </option>
-                                            <option value="scale">
-                                                scale (s)
-                                            </option>
-                                        </select>
-                                        <input
-                                            id="activationValue"
-                                            type="number"
-                                            step="0.05"
-                                            value="0.25"
-                                        />
-                                    </div>
-                                    <div
-                                        class="muted mono"
-                                        id="activationFormula"
-                                        style="margin-top: 6px"
-                                    >
-                                        A'_j = A_j + Δ
-                                    </div>
-                                    <p class="muted" style="margin-top: 6px">
-                                        Additive adds Δ, override sets a fixed
-                                        value, scale multiplies the activation.
-                                    </p>
-                                    <label style="margin-top: 8px">
-                                        <input
-                                            id="activationRelu"
-                                            type="checkbox"
-                                        />
-                                        Apply ReLU after intervention
-                                    </label>
-                                    <div
-                                        class="toolbar"
-                                        style="margin-top: 8px"
-                                    >
-                                        <button
-                                            class="btn primary"
-                                            id="applyActivationBtn"
-                                        >
-                                            Apply to selected
-                                        </button>
-                                        <button
-                                            class="btn ghost"
-                                            id="clearActivationBtn"
-                                        >
-                                            Clear for selected
-                                        </button>
-                                        <button
-                                            class="btn ghost"
-                                            id="clearAllActivationBtn"
-                                        >
-                                            Clear all activation interventions
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label for="weightAction"
-                                        >Weight intervention</label
-                                    >
-                                    <div class="row">
-                                        <select id="weightAction">
-                                            <option value="zero">
-                                                Zero outgoing weights
-                                            </option>
-                                            <option value="scale">
-                                                Scale outgoing weights
-                                            </option>
-                                        </select>
-                                        <input
-                                            id="weightScale"
-                                            type="number"
-                                            step="0.1"
-                                            value="0.5"
-                                        />
-                                    </div>
-                                    <p class="muted" style="margin-top: 6px">
-                                        Zero removes the concept’s influence;
-                                        scale dampens or amplifies its effect
-                                        downstream.
-                                    </p>
-                                    <div
-                                        class="toolbar"
-                                        style="margin-top: 8px"
-                                    >
-                                        <button
-                                            class="btn primary"
-                                            id="applyWeightBtn"
-                                        >
-                                            Apply weight intervention
-                                        </button>
-                                        <button
-                                            class="btn ghost"
-                                            id="clearWeightBtn"
-                                        >
-                                            Clear weight interventions
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="controls" style="margin-top: 14px">
-                                <div>
-                                    <label>Experiment controls</label>
-                                    <div class="toolbar">
-                                        <button
-                                            class="btn primary"
-                                            id="runBaselineBtn"
-                                        >
-                                            Run baseline
-                                        </button>
-                                        <button
-                                            class="btn primary"
-                                            id="runIntervenedBtn"
-                                        >
-                                            Run with intervention
-                                        </button>
-                                        <button class="btn" id="compareBtn">
-                                            Compare
-                                        </button>
-                                        <button
-                                            class="btn ghost"
-                                            id="resetInterventionsBtn"
-                                        >
-                                            Reset interventions
-                                        </button>
-                                    </div>
-                                    <label style="margin-top: 8px">
-                                        <input
-                                            id="lockBaseline"
-                                            type="checkbox"
-                                        />
-                                        Lock baseline
-                                    </label>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="card section" id="input-workspace">
-                <div class="section-head">
-                    <h2>Input Workspace</h2>
-                    <span class="pill">Loaded: <b id="loadedStatus">—</b></span>
-                </div>
-
-                <div class="tab-panel active" id="tab-classification">
-                    <label for="inputText">Input text</label>
-                    <textarea
-                        id="inputText"
-                        placeholder="Enter text to classify..."
-                    ></textarea>
-                    <label for="trueLabel">True label (optional)</label>
-                    <input
-                        id="trueLabel"
-                        type="text"
-                        placeholder="Optional ground truth label"
-                    />
-                    <div class="toolbar">
-                        <button class="btn primary" id="sendToModelBtn">
-                            Send to model
-                        </button>
-                    </div>
-                </div>
-
-                <div class="tab-panel" id="tab-generation">
-                    <label for="genPrompt">Prompt</label>
-                    <textarea
-                        id="genPrompt"
-                        placeholder="Enter a prompt for generation..."
-                    ></textarea>
-                    <details class="card" style="padding: 12px">
-                        <summary class="muted">Decoding settings</summary>
-                        <div class="row" style="margin-top: 10px">
-                            <div>
-                                <label for="decodeMaxTokens">Max tokens</label>
-                                <input
-                                    id="decodeMaxTokens"
-                                    type="number"
-                                    value="128"
-                                />
-                            </div>
-                            <div>
-                                <label for="decodeTemperature"
-                                    >Temperature</label
-                                >
-                                <input
-                                    id="decodeTemperature"
-                                    type="number"
-                                    step="0.1"
-                                    value="0.7"
-                                />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div>
-                                <label for="decodeTopP">Top-p</label>
-                                <input
-                                    id="decodeTopP"
-                                    type="number"
-                                    step="0.05"
-                                    value="0.9"
-                                />
-                            </div>
-                            <div>
-                                <label for="decodeSeed">Seed</label>
-                                <input
-                                    id="decodeSeed"
-                                    type="number"
-                                    value="7"
-                                />
-                            </div>
-                        </div>
-                    </details>
-                    <div class="toolbar">
-                        <button class="btn primary" id="generateBtn">
-                            Generate
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <section class="card section" id="results">
-                <div class="section-head">
-                    <h2>Results & Evidence</h2>
-                </div>
-                <div id="apiWarningBanner" class="api-banner warn"></div>
-                <div id="apiErrorBanner" class="api-banner error"></div>
-
-                <div class="kpis" style="display: none">
-                    <div class="kpi">
-                        <div class="name" id="kpiPrimaryName">Accuracy</div>
-                        <div class="val" id="kpiPrimary">—</div>
-                    </div>
-                    <div class="kpi">
-                        <div class="name">Steering score</div>
-                        <div class="val" id="kpiSteer">—</div>
-                    </div>
-                    <div class="kpi">
-                        <div class="name" id="kpiDeltaName">Δ Accuracy</div>
-                        <div class="val" id="kpiDelta">—</div>
-                    </div>
-                </div>
-
-                <div class="results-grid" style="display: none; margin-top: 12px">
-                    <div class="result-card">
-                        <h3 style="margin: 0">Baseline</h3>
-                        <div class="output-block">
-                            <div class="output-title">Output</div>
-                            <div class="output-text" id="baselineText">
-                                No baseline run yet.
-                            </div>
-                            <div class="output-meta" id="baselineMeta">
-                                Run baseline to see outputs.
-                            </div>
-                        </div>
-                        <div class="output-block">
-                            <div class="output-title">Prompt</div>
-                            <div class="output-text mono" id="exPrompt">—</div>
-                            <div class="output-meta">
-                                Task: <span id="exTaskTag">—</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="result-card">
-                        <h3 style="margin: 0">Intervened</h3>
-                        <div class="output-block">
-                            <div class="output-title">
-                                Output (α =
-                                <span id="exAlpha" class="exAlphaText"
-                                    >0.50</span
-                                >)
-                            </div>
-                            <div class="output-text" id="intervenedText">
-                                No intervened run yet.
-                            </div>
-                            <div class="output-meta" id="intervenedMeta">
-                                Run with intervention to see outputs.
-                            </div>
-                        </div>
-                        <div class="output-block">
-                            <div class="output-title">Baseline reference</div>
-                            <div class="output-text" id="exBefore">—</div>
-                            <div class="output-meta">α = 0.00</div>
-                        </div>
-                        <div class="output-block">
-                            <div class="output-title">Intervened reference</div>
-                            <div class="output-text" id="exAfter">—</div>
-                            <div class="output-meta">
-                                α = <span class="exAlphaText">0.50</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="evidence-grid">
-                    <div class="evidence-card">
-                        <div class="section-head" style="margin-bottom: 10px">
-                            <h3 style="margin: 0">Top Concepts</h3>
-                        </div>
-                        <div class="output-block" style="margin-bottom: 12px">
-                            <div class="output-title">Latest Model Output</div>
-                            <div class="output-text" id="modelOutputText">
-                                Run the model to view output.
-                            </div>
-                            <div class="output-meta" id="modelOutputMeta">
-                                No response yet.
-                            </div>
-                        </div>
-                        <div id="conceptsContainer"></div>
-                        <div
-                            id="conceptsEmpty"
-                            class="emptyMsg"
-                            style="display: none"
-                        >
-                            Run baseline to see activations and contributions.
-                        </div>
-                        <table class="table" style="margin-top: 12px">
-                            <thead>
-                                <tr>
-                                    <th>Concept</th>
-                                    <th>Activation</th>
-                                    <th>Weight</th>
-                                    <th>Contribution</th>
-                                </tr>
-                            </thead>
-                            <tbody id="evidenceTableBody"></tbody>
-                        </table>
-                    </div>
-
-                </div>
-
-                <div class="section" style="margin-top: 16px">
-                    <div class="card" style="padding: 14px">
-                        <h3 style="margin: 0 0 8px" id="sankeyTitle">
-                            Text classification task
-                        </h3>
-                        <p class="muted" id="sankeyDesc">
-                            Visualizes how concept activations flow into
-                            predicted classes.
-                        </p>
-                        <iframe
-                            class="sankey-frame"
-                            id="sankeyFrame"
-                            src="sankey_embed.html"
-                            title="Concept to class flow diagram"
-                            loading="lazy"
-                        ></iframe>
-                    </div>
-                </div>
-
-                <div class="footlinks" style="margin-top: 18px">
-                    <a
-                        class="btn"
-                        href="https://github.com/chguerra15/capstone-site"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Website Repo</a
-                    >
-                    <a
-                        class="btn"
-                        href="#"
-                        id="codeRepoLink"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Code Repo</a
-                    >
-                </div>
-
-                <div class="card" style="padding: 14px; margin-top: 16px">
-                    <h3 style="margin: 0 0 8px">Project Summary</h3>
-                    <p>
-                        We reproduce and extend Concept Bottleneck LLM work by
-                        building tooling to select concept-linked neurons and
-                        apply activation interventions (ablation /
-                        amplification) while measuring downstream performance
-                        and behavioral steering.
-                    </p>
-                    <p class="muted" style="margin-top: 8px">
-                        Team: Christian Guerra, Neil Dandekar
-                    </p>
-                </div>
-            </section>
-        </div>
-
-        <script>
-            // Set your code repo link here.
-            const CODE_REPO_URL = "https://github.com/neil-dandekar/capstone";
-
-            const API_CATALOG = {
-                meta: { code_repo: CODE_REPO_URL, model_checkpoint: null },
-                datasets: [
-                    {
-                        id: "sst2",
-                        name: "SST-2",
-                        tasks: [
-                            { id: "classification", name: "Classification", interventions: [{}] },
-                            { id: "generation", name: "Generation", interventions: [{}] },
-                        ],
-                    },
-                    {
-                        id: "SetFit/sst2",
-                        name: "SetFit/sst2",
-                        tasks: [
-                            { id: "classification", name: "Classification", interventions: [{}] },
-                            { id: "generation", name: "Generation", interventions: [{}] },
-                        ],
-                    },
-                    {
-                        id: "ag_news",
-                        name: "AG News",
-                        tasks: [
-                            { id: "classification", name: "Classification", interventions: [{}] },
-                            { id: "generation", name: "Generation", interventions: [{}] },
-                        ],
-                    },
-                    {
-                        id: "yelp_polarity",
-                        name: "Yelp Polarity",
-                        tasks: [
-                            { id: "classification", name: "Classification", interventions: [{}] },
-                            { id: "generation", name: "Generation", interventions: [{}] },
-                        ],
-                    },
-                    {
-                        id: "dbpedia_14",
-                        name: "DBPedia 14",
-                        tasks: [
-                            { id: "classification", name: "Classification", interventions: [{}] },
-                            { id: "generation", name: "Generation", interventions: [{}] },
-                        ],
-                    },
-                ],
-            };
-
-            let DATA = null;
-            const state = {
-                selectedTaskMode: "classification",
-                selectedDataset: "",
-                currentInput: "",
-                baselineResult: null,
-                intervenedResult: null,
-                concepts: [],
-                interventions: { activation: {}, weights: {} },
-                isBaselineLocked: false,
-                pendingChanges: false,
-                lastRunConfig: null,
-                selectedConceptIds: [],
-                lastSelectedConceptIndex: null,
-                isRunning: false,
-                lastApiResponse: null,
-            };
-
-            function $(id) {
-                return document.getElementById(id);
-            }
-
-            function setPendingChanges(flag) {
-                state.pendingChanges = flag;
-                $("pendingChanges").textContent = flag
-                    ? "Pending changes"
-                    : "No pending changes";
-            }
-
-            function setTaskMode(mode) {
-                state.selectedTaskMode = mode;
-                $("taskMode").value = mode;
-                setActiveTab(mode);
-                updateSankey();
-            }
-
-            function setActiveTab(mode) {
-                document.querySelectorAll(".tab-btn").forEach((btn) => {
-                    btn.classList.toggle("active", btn.dataset.tab === mode);
-                });
-                document.querySelectorAll(".tab-panel").forEach((panel) => {
-                    panel.classList.toggle(
-                        "active",
-                        panel.id === `tab-${mode}`,
-                    );
-                });
-            }
-
-            function updateLoadedStatus() {
-                const ds = $("dataset").value || "—";
-                const { task } = getCurrent();
-                const taskId = task?.id || state.selectedTaskMode || "—";
-                const model = DATA?.meta?.model_checkpoint || "default";
-                $("loadedStatus").textContent = `${model}, ${ds}, ${taskId}`;
-            }
-
-            function updateSankey() {
-                const frame = $("sankeyFrame");
-                if (!frame) return;
-                const mode = state.selectedTaskMode;
-                if (mode === "generation") {
-                    $("sankeyTitle").textContent = "Text generation task";
-                    $("sankeyDesc").textContent =
-                        "Neuron → token flows for top-10 activations per topic.";
-                    frame.src = "sankey_generation_embed.html";
-                    frame.title = "Neuron to token flow diagram";
-                    frame.classList.add("sankey-frame--tall");
-                } else {
-                    $("sankeyTitle").textContent = "Text classification task";
-                    $("sankeyDesc").textContent =
-                        "Visualizes how concept activations flow into predicted classes.";
-                    frame.src = "sankey_embed.html";
-                    frame.title = "Concept to class flow diagram";
-                    frame.classList.remove("sankey-frame--tall");
-                }
-            }
-
-            function updateActivationFormula() {
-                const op = $("activationOp").value;
-                const value = $("activationValue").value || "…";
-                let formula = "A'_j = A_j + Δ";
-                if (op === "override") formula = "A'_j = v";
-                if (op === "scale") formula = "A'_j = s × A_j";
-                $("activationFormula").textContent = formula
-                    .replace("Δ", value)
-                    .replace("v", value)
-                    .replace("s", value);
-            }
-
-            function setSelectOptions(selectEl, options, getValue, getLabel) {
-                selectEl.innerHTML = "";
-                for (const opt of options) {
-                    const o = document.createElement("option");
-                    o.value = getValue(opt);
-                    o.textContent = getLabel(opt);
-                    selectEl.appendChild(o);
-                }
-            }
-
-            function nearestIndex(arr, x) {
-                let best = 0;
-                let bestDist = Infinity;
-                for (let i = 0; i < arr.length; i++) {
-                    const d = Math.abs(arr[i] - x);
-                    if (d < bestDist) {
-                        bestDist = d;
-                        best = i;
-                    }
-                }
-                return best;
-            }
-
-            function normalizeAlphaKey(a) {
-                // keys may be "0", "0.0", 0, etc.
-                const n = Number(a);
-                if (Number.isNaN(n)) return String(a);
-                // keep at most 2 decimals to match typical export
-                return (Math.round(n * 100) / 100).toString();
-            }
-
-            function getSnapAlpha(intervention) {
-                const alphas = intervention?.alphas || [0];
-                const i = nearestIndex(alphas, 0.5);
-                return alphas[i] ?? 0;
-            }
-
-            function getCurrent() {
-                const dsId = $("dataset").value;
-                const ds =
-                    DATA.datasets.find((d) => d.id === dsId) ||
-                    DATA.datasets[0];
-                const tasks = ds.tasks || [];
-                const task =
-                    tasks.find((t) =>
-                        String(t.id || "").includes(state.selectedTaskMode),
-                    ) || tasks[0];
-                const intervention = (task?.interventions || [])[0];
-
-                return { ds, task, intervention };
-            }
-
-            function getPrimaryMetric(task, intervention) {
-                // task.primary_metric defines which array to read.
-                // Defaults to "accuracy" if absent.
-                const pm = (task && task.primary_metric) || {
-                    id: "accuracy",
-                    name: "Accuracy",
-                    format: "pct",
-                };
-                const arr = intervention[pm.id];
-                return { pm, arr };
-            }
-
-            function formatPrimaryValue(pm, v) {
-                if (v == null || Number.isNaN(v)) return "—";
-                if (pm.format === "pct") return (v * 100).toFixed(1) + "%";
-                if (pm.format === "num2") return Number(v).toFixed(2);
-                return String(v);
-            }
-
-            function normalizeDatasetId(dsId) {
-                const allowed = new Set([
-                    "sst2",
-                    "SetFit/sst2",
-                    "ag_news",
-                    "yelp_polarity",
-                    "dbpedia_14",
-                ]);
-                if (allowed.has(dsId)) return dsId;
-                if (dsId === "sst2") return "sst2";
-                return "sst2";
-            }
-
-            function deriveModelId(taskMode) {
-                const ckpt = String(
-                    DATA?.meta?.model_checkpoint || "",
-                ).toLowerCase();
-                if (ckpt.includes("llama3")) return "llama3";
-                if (ckpt.includes("gpt2")) return "gpt2";
-                if (ckpt.includes("roberta")) return "roberta";
-                return taskMode === "generation" ? "gpt2" : "roberta";
-            }
-
-            function buildInterventionPayload() {
-                const activation = state.interventions.activation || {};
-                const weights = state.interventions.weights || {};
-                const activationKeys = Object.keys(activation);
-                const weightKeys = Object.keys(weights);
-                const hasActivation = activationKeys.length > 0;
-                const hasWeight = weightKeys.length > 0;
-
-                let mechanism = "activation";
-                if (hasActivation && hasWeight) mechanism = "hybrid";
-                else if (hasWeight) mechanism = "weight";
-
-                const perConceptActivation = {};
-                activationKeys.forEach((id) => {
-                    const item = activation[id] || {};
-                    perConceptActivation[id] = {
-                        op: item.op || "add",
-                        value: Number(item.value || 0),
-                        relu_after: Boolean(item.reluAfter),
-                    };
-                });
-
-                const perConceptWeight = {};
-                weightKeys.forEach((id) => {
-                    const item = weights[id] || {};
-                    perConceptWeight[id] = {
-                        action: item.type || "scale",
-                        value: Number(item.value || 0),
-                    };
-                });
-
-                return {
-                    enabled: hasActivation || hasWeight,
-                    mechanism,
-                    target_concepts: Array.from(
-                        new Set([...activationKeys, ...weightKeys]),
-                    ),
-                    activation: hasActivation
-                        ? { per_concept: perConceptActivation }
-                        : undefined,
-                    weight: hasWeight
-                        ? { per_concept: perConceptWeight }
-                        : undefined,
-                    generation_policy: {
-                        mode: "static",
-                        apply_every_step: true,
-                    },
-                };
-            }
-
-            function buildRunRequest(runMode) {
-                const taskMode = state.selectedTaskMode;
-                const datasetId = normalizeDatasetId(
-                    $("dataset").value || "sst2",
-                );
-                const taskId =
-                    taskMode === "generation" ? "generation" : "classification";
-                const requestId =
-                    "req_" +
-                    Date.now() +
-                    "_" +
-                    Math.random().toString(36).slice(2, 8);
-                const inputText =
-                    taskMode === "generation"
-                        ? $("genPrompt").value
-                        : $("inputText").value;
-
-                return {
-                    request_id: requestId,
-                    run_mode: runMode,
-                    context: {
-                        task_mode: taskMode,
-                        dataset_id: datasetId,
-                        task_id: taskId,
-                        model_id: deriveModelId(taskMode),
-                        model_checkpoint: DATA?.meta?.model_checkpoint || null,
-                    },
-                    input: {
-                        text: inputText || "",
-                        true_label:
-                            ($("trueLabel").value || "").trim() || undefined,
-                    },
-                    intervention: buildInterventionPayload(),
-                    generation: {
-                        max_tokens: Number($("decodeMaxTokens").value || 128),
-                        temperature: Number(
-                            $("decodeTemperature").value || 0.7,
-                        ),
-                        top_p: Number($("decodeTopP").value || 0.9),
-                        seed: Number($("decodeSeed").value || 7),
-                    },
-                    response_options: {
-                        include_evidence: true,
-                        include_top_concepts: true,
-                        include_token_time_evidence: taskMode === "generation",
-                        top_k_concepts: 10,
-                    },
-                };
-            }
-
-            function setRunLoading(flag) {
-                state.isRunning = flag;
-                [
-                    "runBaselineBtn",
-                    "runIntervenedBtn",
-                    "compareBtn",
-                    "sendToModelBtn",
-                    "generateBtn",
-                ].forEach((id) => {
-                    const el = $(id);
-                    if (el) el.disabled = flag;
-                });
-                if (flag) {
-                    $("baselineMeta").textContent = "Running request...";
-                    $("intervenedMeta").textContent = "Running request...";
-                }
-            }
-
-            function clearApiBanners() {
-                $("apiWarningBanner").style.display = "none";
-                $("apiWarningBanner").textContent = "";
-                $("apiErrorBanner").style.display = "none";
-                $("apiErrorBanner").textContent = "";
-            }
-
-            function renderWarnings(warnings) {
-                const banner = $("apiWarningBanner");
-                if (Array.isArray(warnings) && warnings.length) {
-                    banner.style.display = "block";
-                    banner.textContent = warnings.join("\n");
-                } else {
-                    banner.style.display = "none";
-                    banner.textContent = "";
-                }
-            }
-
-            function renderApiError(err) {
-                const code = err?.code || "REQUEST_FAILED";
-                const message = err?.message || "Unknown backend error";
-                const details =
-                    Array.isArray(err?.details) && err.details.length
-                        ? `\n${JSON.stringify(err.details, null, 2)}`
-                        : "";
-                const banner = $("apiErrorBanner");
-                banner.style.display = "block";
-                banner.textContent = `${code}: ${message}${details}`;
-            }
-
-            function formatProbabilities(probabilities) {
-                if (!probabilities || typeof probabilities !== "object")
-                    return "—";
-                const entries = Object.entries(probabilities).sort(
-                    (a, b) => Number(b[1]) - Number(a[1]),
-                );
-                if (!entries.length) return "—";
-                return entries
-                    .map(
-                        ([label, p]) =>
-                            `${label}: ${(Number(p) * 100).toFixed(1)}%`,
-                    )
-                    .join(", ");
-            }
-
-            function renderResultCard(result, target) {
-                if (!result || !result.output) return;
-                const cls = result.output.classification;
-                if (cls) {
-                    const body = [
-                        `Predicted label: ${cls.predicted_label || "—"}`,
-                        `Confidence: ${Number(cls.confidence ?? 0).toFixed(4)}`,
-                        `Class probabilities: ${formatProbabilities(cls.probabilities)}`,
-                    ].join(" | ");
-                    if (target === "baseline") {
-                        $("baselineText").textContent = body;
-                        $("baselineMeta").textContent =
-                            result.output.text || "Classification result";
-                    } else {
-                        $("intervenedText").textContent = body;
-                        $("intervenedMeta").textContent =
-                            result.output.text || "Classification result";
-                    }
-                    return;
-                }
-
-                const fallbackText =
-                    result.output.text || "No output returned.";
-                if (target === "baseline") {
-                    $("baselineText").textContent = fallbackText;
-                    $("baselineMeta").textContent =
-                        "No classification payload.";
-                } else {
-                    $("intervenedText").textContent = fallbackText;
-                    $("intervenedMeta").textContent =
-                        "No classification payload.";
-                }
-            }
-
-            function renderVisibleModelOutput(result, label) {
-                const textEl = $("modelOutputText");
-                const metaEl = $("modelOutputMeta");
-                if (!textEl || !metaEl) return;
-                if (!result || !result.output) {
-                    textEl.textContent = "Run the model to view output.";
-                    metaEl.textContent = "No response yet.";
-                    return;
-                }
-
-                const cls = result.output.classification;
-                if (cls) {
-                    textEl.textContent = [
-                        `Predicted label: ${cls.predicted_label || "—"}`,
-                        `Confidence: ${Number(cls.confidence ?? 0).toFixed(4)}`,
-                        `Class probabilities: ${formatProbabilities(cls.probabilities)}`,
-                    ].join(" | ");
-                } else {
-                    textEl.textContent = result.output.text || "No output returned.";
-                }
-                metaEl.textContent = label || "Latest response";
-            }
-
-            function renderTopConceptsFromResponse(runResult) {
-                const body = $("evidenceTableBody");
-                body.innerHTML = "";
-                const list = runResult?.evidence?.top_concepts || [];
-                if (!Array.isArray(list) || !list.length) return;
-                list.forEach((item) => {
-                    const tr = document.createElement("tr");
-                    const tdName = document.createElement("td");
-                    tdName.textContent =
-                        item.concept_name || item.concept_id || "—";
-                    const tdAct = document.createElement("td");
-                    tdAct.textContent = Number.isFinite(Number(item.activation))
-                        ? Number(item.activation).toFixed(3)
-                        : "—";
-                    const tdWeight = document.createElement("td");
-                    tdWeight.textContent = "—";
-                    const tdContrib = document.createElement("td");
-                    tdContrib.textContent = "—";
-                    tr.appendChild(tdName);
-                    tr.appendChild(tdAct);
-                    tr.appendChild(tdWeight);
-                    tr.appendChild(tdContrib);
-                    body.appendChild(tr);
-                });
-            }
-
-            function renderRunResponse(response, runMode) {
-                state.lastApiResponse = response;
-                renderWarnings(response?.warnings || []);
-                if (runMode === "baseline") {
-                    state.baselineResult = response?.baseline || null;
-                    renderResultCard(response?.baseline, "baseline");
-                    renderVisibleModelOutput(response?.baseline, "Baseline");
-                    renderTopConceptsFromResponse(response?.baseline);
-                    return;
-                }
-                if (runMode === "intervened") {
-                    state.intervenedResult = response?.intervened || null;
-                    renderResultCard(response?.intervened, "intervened");
-                    renderVisibleModelOutput(response?.intervened, "Intervened");
-                    renderTopConceptsFromResponse(response?.intervened);
-                    return;
-                }
-                state.baselineResult = response?.baseline || null;
-                state.intervenedResult = response?.intervened || null;
-                renderResultCard(response?.baseline, "baseline");
-                renderResultCard(response?.intervened, "intervened");
-                renderVisibleModelOutput(
-                    response?.intervened || response?.baseline,
-                    response?.intervened ? "Intervened (compare)" : "Baseline (compare)",
-                );
-                renderTopConceptsFromResponse(
-                    response?.intervened || response?.baseline,
-                );
-            }
-
-            async function runWithApi(runMode) {
-                clearApiBanners();
-                setRunLoading(true);
-                try {
-                    if (
-                        !window.CbllmApi ||
-                        typeof window.CbllmApi.postRun !== "function"
-                    ) {
-                        throw {
-                            code: "API_CLIENT_UNAVAILABLE",
-                            message: "API client failed to load.",
-                        };
-                    }
-                    const payload = buildRunRequest(runMode);
-                    const response = await window.CbllmApi.postRun(payload);
-                    console.log("CB-LLM backend response:", response);
-                    renderRunResponse(response, runMode);
-                    setPendingChanges(false);
-                } catch (err) {
-                    renderApiError(err);
-                } finally {
-                    setRunLoading(false);
-                    updateRecipeViews();
-                }
-            }
-
-            function renderTopConcepts(intervention, snapAlpha) {
-                const container = $("conceptsContainer");
-                const empty = $("conceptsEmpty");
-                container.innerHTML = "";
-
-                const alphaKey = normalizeAlphaKey(snapAlpha);
-                const block =
-                    intervention.top_concepts_by_class &&
-                    intervention.top_concepts_by_class[alphaKey];
-                if (!block || typeof block !== "object") {
-                    empty.style.display = "block";
-                    return;
-                }
-                empty.style.display = "none";
-
-                const classNames = Object.keys(block);
-                const classesToRender = classNames;
-
-                // collect max for scaling bars (per class)
-                for (const cls of classesToRender) {
-                    const items = Array.isArray(block[cls])
-                        ? block[cls].slice()
-                        : [];
-                    // keep only top 5 (strongest contribution)
-                    items.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-                    const top5 = items.slice(0, 5);
-
-                    const maxScore = Math.max(
-                        1e-9,
-                        ...top5.map((x) => Math.abs(Number(x.score ?? 0))),
-                    );
-
-                    const classEl = document.createElement("div");
-                    classEl.className = "classBlock";
-
-                    const h = document.createElement("div");
-                    h.className = "className";
-                    h.textContent = cls;
-                    classEl.appendChild(h);
-
-                    if (!top5.length) {
-                        const msg = document.createElement("div");
-                        msg.className = "emptyMsg";
-                        msg.textContent =
-                            "No concepts available for this class.";
-                        classEl.appendChild(msg);
-                    } else {
-                        for (const c of top5) {
-                            const score = Number(c.score ?? 0);
-                            const pct = Math.max(
-                                0,
-                                Math.min(
-                                    100,
-                                    (Math.abs(score) / maxScore) * 100,
-                                ),
-                            );
-
-                            const row = document.createElement("div");
-                            row.className = "barRow";
-
-                            const track = document.createElement("div");
-                            track.className = "barTrack";
-
-                            const fill = document.createElement("div");
-                            fill.className = "barFill";
-                            fill.style.width = pct.toFixed(1) + "%";
-
-                            const label = document.createElement("div");
-                            label.className = "barLabel";
-                            label.textContent = c.name ?? "—";
-
-                            track.appendChild(fill);
-                            track.appendChild(label);
-
-                            const val = document.createElement("div");
-                            val.className = "barVal";
-                            val.textContent = Number.isFinite(score)
-                                ? score.toFixed(2)
-                                : "—";
-
-                            row.appendChild(track);
-                            row.appendChild(val);
-                            classEl.appendChild(row);
-                        }
-                    }
-
-                    container.appendChild(classEl);
-                }
-            }
-
-            function collectConcepts(intervention, snapAlpha) {
-                const alphaKey = normalizeAlphaKey(snapAlpha);
-                const block =
-                    intervention.top_concepts_by_class &&
-                    intervention.top_concepts_by_class[alphaKey];
-                if (!block || typeof block !== "object") return [];
-
-                const map = new Map();
-                Object.values(block).forEach((list) => {
-                    (Array.isArray(list) ? list : []).forEach((item) => {
-                        const name = item.name ?? "—";
-                        const id = String(name);
-                        const score = Number(item.score ?? 0);
-                        const prev = map.get(id);
-                        if (
-                            !prev ||
-                            Math.abs(score) > Math.abs(prev.contribution)
-                        ) {
-                            map.set(id, {
-                                id,
-                                name,
-                                activationBase: null,
-                                activationInterv: null,
-                                contribution: score,
-                            });
-                        }
-                    });
-                });
-                return Array.from(map.values());
-            }
-
-            function isConceptIntervened(conceptId) {
-                return Boolean(
-                    state.interventions.activation[conceptId] ||
-                    state.interventions.weights[conceptId],
-                );
-            }
-
-            function renderConceptList() {
-                const listEl = $("conceptList");
-                const search = ($("conceptSearch").value || "").toLowerCase();
-                const sort = $("conceptSort").value;
-
-                let concepts = state.concepts.slice();
-                if (search) {
-                    concepts = concepts.filter((c) =>
-                        c.name.toLowerCase().includes(search),
-                    );
-                }
-
-                if (sort === "contribution") {
-                    concepts.sort(
-                        (a, b) =>
-                            Math.abs(b.contribution) - Math.abs(a.contribution),
-                    );
-                } else if (sort === "activation") {
-                    concepts.sort(
-                        (a, b) =>
-                            (b.activationBase ?? 0) - (a.activationBase ?? 0),
-                    );
-                } else {
-                    concepts.sort((a, b) => a.name.localeCompare(b.name));
-                }
-
-                listEl.innerHTML = "";
-                if (!concepts.length) {
-                    const empty = document.createElement("div");
-                    empty.className = "emptyMsg";
-                    empty.style.padding = "12px";
-                    empty.textContent =
-                        "Run baseline to see activations and contributions.";
-                    listEl.appendChild(empty);
-                }
-                concepts.forEach((c, index) => {
-                    const row = document.createElement("div");
-                    row.className = "concept-row";
-                    row.dataset.id = c.id;
-                    row.dataset.index = String(index);
-                    if (state.selectedConceptIds.includes(c.id))
-                        row.classList.add("selected");
-
-                    const name = document.createElement("div");
-                    name.textContent = c.name;
-
-                    const base = document.createElement("div");
-                    base.textContent =
-                        c.activationBase == null
-                            ? "—"
-                            : Number(c.activationBase).toFixed(2);
-
-                    const interv = document.createElement("div");
-                    interv.textContent =
-                        c.activationInterv == null
-                            ? "—"
-                            : Number(c.activationInterv).toFixed(2);
-
-                    const badge = document.createElement("div");
-                    badge.className = "badge";
-                    badge.textContent = isConceptIntervened(c.id)
-                        ? "intervened"
-                        : "—";
-
-                    row.appendChild(name);
-                    row.appendChild(base);
-                    row.appendChild(interv);
-                    row.appendChild(badge);
-                    listEl.appendChild(row);
-                });
-
-                $("conceptCount").textContent = String(
-                    state.selectedConceptIds.length,
-                );
-                $("interventionCount").textContent = String(
-                    Object.keys(state.interventions.activation).length +
-                        Object.keys(state.interventions.weights).length,
-                );
-            }
-
-            function renderEvidenceTable(intervention, snapAlpha) {
-                const body = $("evidenceTableBody");
-                body.innerHTML = "";
-                const alphaKey = normalizeAlphaKey(snapAlpha);
-                const block =
-                    intervention.top_concepts_by_class &&
-                    intervention.top_concepts_by_class[alphaKey];
-                if (!block || typeof block !== "object") return;
-
-                const classNames = Object.keys(block);
-                const classesToRender = classNames;
-
-                const rows = [];
-
-                classesToRender.forEach((cls) => {
-                    const items = Array.isArray(block[cls]) ? block[cls] : [];
-                    items.forEach((item) => {
-                        rows.push({
-                            name: item.name ?? "—",
-                            activation: "—",
-                            weight: "—",
-                            contribution: Number(item.score ?? 0),
-                        });
-                    });
-                });
-
-                rows.slice(0, 30).forEach((row) => {
-                    const tr = document.createElement("tr");
-                    const tdName = document.createElement("td");
-                    tdName.textContent = row.name;
-                    const tdAct = document.createElement("td");
-                    tdAct.textContent = row.activation;
-                    const tdWeight = document.createElement("td");
-                    tdWeight.textContent = row.weight;
-                    const tdContrib = document.createElement("td");
-                    tdContrib.textContent = Number.isFinite(row.contribution)
-                        ? row.contribution.toFixed(2)
-                        : "—";
-                    tr.appendChild(tdName);
-                    tr.appendChild(tdAct);
-                    tr.appendChild(tdWeight);
-                    tr.appendChild(tdContrib);
-                    body.appendChild(tr);
-                });
-            }
-
-            function handleConceptSelection(event) {
-                const row = event.target.closest(".concept-row");
-                if (!row) return;
-                const conceptId = row.dataset.id;
-                const index = Number(row.dataset.index);
-                const isMulti = event.metaKey || event.ctrlKey;
-                const isRange =
-                    event.shiftKey && state.lastSelectedConceptIndex != null;
-
-                if (isRange) {
-                    const start = Math.min(
-                        state.lastSelectedConceptIndex,
-                        index,
-                    );
-                    const end = Math.max(state.lastSelectedConceptIndex, index);
-                    const ids = [];
-                    const rows = Array.from(
-                        $("conceptList").querySelectorAll(".concept-row"),
-                    );
-                    for (let i = start; i <= end; i++) {
-                        const id = rows[i]?.dataset.id;
-                        if (id) ids.push(id);
-                    }
-                    state.selectedConceptIds = Array.from(
-                        new Set([...state.selectedConceptIds, ...ids]),
-                    );
-                } else if (isMulti) {
-                    if (state.selectedConceptIds.includes(conceptId)) {
-                        state.selectedConceptIds =
-                            state.selectedConceptIds.filter(
-                                (id) => id !== conceptId,
-                            );
-                    } else {
-                        state.selectedConceptIds = [
-                            ...state.selectedConceptIds,
-                            conceptId,
-                        ];
-                    }
-                } else {
-                    state.selectedConceptIds = [conceptId];
-                }
-
-                state.lastSelectedConceptIndex = index;
-                renderConceptList();
-            }
-
-            function applyActivationIntervention() {
-                const op = $("activationOp").value;
-                const value = Number($("activationValue").value);
-                const reluAfter = $("activationRelu").checked;
-                state.selectedConceptIds.forEach((id) => {
-                    state.interventions.activation[id] = {
-                        op,
-                        value,
-                        reluAfter,
-                    };
-                });
-                setPendingChanges(true);
-                renderConceptList();
-                const { intervention } = getCurrent();
-                renderEvidenceTable(intervention, getSnapAlpha(intervention));
-                updateRecipeViews();
-            }
-
-            function clearActivationIntervention(selectedOnly) {
-                if (selectedOnly) {
-                    state.selectedConceptIds.forEach((id) => {
-                        delete state.interventions.activation[id];
-                    });
-                } else {
-                    state.interventions.activation = {};
-                }
-                setPendingChanges(true);
-                renderConceptList();
-                const { intervention } = getCurrent();
-                renderEvidenceTable(intervention, getSnapAlpha(intervention));
-                updateRecipeViews();
-            }
-
-            function applyWeightIntervention() {
-                const type = $("weightAction").value;
-                const value = Number($("weightScale").value);
-                state.selectedConceptIds.forEach((id) => {
-                    state.interventions.weights[id] = { type, value };
-                });
-                setPendingChanges(true);
-                renderConceptList();
-                const { intervention } = getCurrent();
-                renderEvidenceTable(intervention, getSnapAlpha(intervention));
-                updateRecipeViews();
-            }
-
-            function clearWeightIntervention() {
-                state.interventions.weights = {};
-                setPendingChanges(true);
-                renderConceptList();
-                const { intervention } = getCurrent();
-                renderEvidenceTable(intervention, getSnapAlpha(intervention));
-                updateRecipeViews();
-            }
-
-            function resetInterventions() {
-                state.interventions = { activation: {}, weights: {} };
-                setPendingChanges(false);
-                renderConceptList();
-                const { intervention } = getCurrent();
-                renderEvidenceTable(intervention, getSnapAlpha(intervention));
-                updateRecipeViews();
-            }
-
-            function buildRecipe() {
-                const { ds, task } = getCurrent();
-                return {
-                    dataset: ds?.id || null,
-                    task_mode: state.selectedTaskMode,
-                    model_checkpoint: DATA?.meta?.model_checkpoint || null,
-                    activation_interventions: state.interventions.activation,
-                    weight_interventions: state.interventions.weights,
-                };
-            }
-
-            function applyRecipe(recipe) {
-                if (!recipe || typeof recipe !== "object") return;
-                if (recipe.dataset && DATA?.datasets) {
-                    const dsMatch = DATA.datasets.find(
-                        (d) => d.id === recipe.dataset,
-                    );
-                    if (dsMatch) $("dataset").value = dsMatch.id;
-                }
-                if (recipe.task_mode) setTaskMode(recipe.task_mode);
-
-                state.interventions.activation =
-                    recipe.activation_interventions || {};
-                state.interventions.weights = recipe.weight_interventions || {};
-                rebuildTaskInterventions();
-                renderConceptList();
-                setPendingChanges(true);
-                updateRecipeViews();
-            }
-
-            function updateRecipeViews() {
-                const recipe = buildRecipe();
-                const json = JSON.stringify(recipe, null, 2);
-                const recipeJsonEl = $("recipeJson");
-                if (recipeJsonEl) recipeJsonEl.value = json;
-                const recipeFooterEl = $("recipeFooter");
-                if (recipeFooterEl) recipeFooterEl.textContent = json;
-                updateReproducibilityInfo();
-            }
-
-            function buildResult(task, intervention, alphaValue) {
-                const alphas = intervention.alphas || [0];
-                const idx = nearestIndex(alphas, alphaValue);
-                const alpha = alphas[idx] ?? 0;
-
-                const { pm, arr: primaryArr } = getPrimaryMetric(
-                    task,
-                    intervention,
-                );
-                const steerArr = intervention.steering || [];
-                const primary = primaryArr ? primaryArr[idx] : null;
-                const steer = steerArr[idx];
-                const meta = `${pm.name}: ${formatPrimaryValue(pm, primary)} | steering: ${steer != null ? Number(steer).toFixed(2) : "—"} | α=${Number(alpha).toFixed(2)}`;
-
-                const ex = intervention.examples || {};
-                const key = normalizeAlphaKey(alpha);
-                const example =
-                    ex[key] || ex[String(Number(key).toFixed(1))] || null;
-
-                return {
-                    alpha,
-                    text: example
-                        ? alpha === 0
-                            ? example.before
-                            : example.after
-                        : "—",
-                    meta,
-                };
-            }
-
-            function applyResultToUI(result, target) {
-                if (!result) return;
-                if (target === "baseline") {
-                    $("baselineText").textContent = result.text || "—";
-                    $("baselineMeta").textContent = result.meta || "—";
-                } else {
-                    $("intervenedText").textContent = result.text || "—";
-                    $("intervenedMeta").textContent = result.meta || "—";
-                }
-            }
-
-            async function runBaseline() {
-                await runWithApi("baseline");
-            }
-
-            async function runIntervened() {
-                await runWithApi("intervened");
-            }
-
-            async function runCompare() {
-                await runWithApi("compare");
-            }
-
-            function resetResults() {
-                state.baselineResult = null;
-                state.intervenedResult = null;
-                state.lastApiResponse = null;
-                $("baselineText").textContent = "No baseline run yet.";
-                $("baselineMeta").textContent = "Run baseline to see outputs.";
-                $("intervenedText").textContent = "No intervened run yet.";
-                $("intervenedMeta").textContent =
-                    "Run with intervention to see outputs.";
-                const outputText = $("modelOutputText");
-                const outputMeta = $("modelOutputMeta");
-                if (outputText) outputText.textContent = "Run the model to view output.";
-                if (outputMeta) outputMeta.textContent = "No response yet.";
-                clearApiBanners();
-            }
-
-            function updateUI() {
-                const { task, intervention } = getCurrent();
-                if (!task || !intervention) return;
-
-                const i = nearestIndex(intervention.alphas || [0], 0.5);
-                const snapAlpha = (intervention.alphas || [0])[i] ?? 0;
-                const alphaText = Number(snapAlpha).toFixed(2);
-                document.querySelectorAll(".exAlphaText").forEach((el) => {
-                    el.textContent = alphaText;
-                });
-
-                const { pm, arr: primaryArr } = getPrimaryMetric(
-                    task,
-                    intervention,
-                );
-                $("kpiPrimaryName").textContent = pm.name;
-                $("kpiDeltaName").textContent = `Δ ${pm.name}`;
-
-                const steerArr = intervention.steering || [];
-                const primary = primaryArr ? primaryArr[i] : null;
-                const steer = steerArr[i];
-
-                $("kpiPrimary").textContent = formatPrimaryValue(pm, primary);
-                $("kpiSteer").textContent =
-                    steer != null ? Number(steer).toFixed(2) : "—";
-
-                // Δ vs baseline alpha=0
-                const baseIdx = nearestIndex(intervention.alphas || [0], 0.0);
-                const basePrimary = primaryArr ? primaryArr[baseIdx] : null;
-
-                let deltaStr = "—";
-                if (primary != null && basePrimary != null) {
-                    const delta = Number(primary) - Number(basePrimary);
-                    const sign = delta >= 0 ? "+" : "";
-                    // if pct-format metric, show "pts" in percentage points
-                    if (pm.format === "pct")
-                        deltaStr = `${sign}${(delta * 100).toFixed(1)} pts`;
-                    else deltaStr = `${sign}${delta.toFixed(2)}`;
-                }
-                $("kpiDelta").textContent = deltaStr;
-
-                // Examples
-                $("exTaskTag").textContent = task.name || "—";
-                $("exPrompt").textContent = intervention.prompt || "—";
-
-                const ex = intervention.examples || {};
-                const keySnap = normalizeAlphaKey(snapAlpha);
-                const keyBase = normalizeAlphaKey(
-                    (intervention.alphas || [0])[baseIdx] ?? 0,
-                );
-
-                const baselineEx =
-                    ex[keyBase] ||
-                    ex[String(Number(keyBase).toFixed(1))] ||
-                    ex["0"] ||
-                    ex["0.0"] ||
-                    null;
-                const snappedEx =
-                    ex[keySnap] ||
-                    ex[String(Number(keySnap).toFixed(1))] ||
-                    null;
-
-                if (baselineEx)
-                    $("exBefore").textContent = baselineEx.before || "—";
-                else $("exBefore").textContent = "—";
-
-                if (snappedEx)
-                    $("exAfter").textContent = snappedEx.after || "—";
-                else $("exAfter").textContent = "—";
-
-                // Concepts
-                renderTopConcepts(intervention, snapAlpha);
-
-                // Concept list + evidence table
-                state.concepts = collectConcepts(intervention, snapAlpha);
-                renderConceptList();
-                renderEvidenceTable(intervention, snapAlpha);
-
-                const baselineLockedEl = $("baselineLockedStatus");
-                if (baselineLockedEl) {
-                    baselineLockedEl.textContent = state.isBaselineLocked
-                        ? "true"
-                        : "false";
-                }
-                updateLoadedStatus();
-                updateReproducibilityInfo();
-            }
-
-            function updateReproducibilityInfo() {
-                const dsId = $("dataset").value || "—";
-                const { task } = getCurrent();
-                const taskId = task?.id || state.selectedTaskMode || "—";
-                const model = DATA?.meta?.model_checkpoint || "default";
-                const maxTokens = $("decodeMaxTokens").value;
-                const temp = $("decodeTemperature").value;
-                const topP = $("decodeTopP").value;
-                const seed = $("decodeSeed").value;
-                const reproducibilityEl = $("reproducibilityInfo");
-                if (reproducibilityEl) {
-                    reproducibilityEl.textContent =
-                        `dataset: ${dsId} | task: ${taskId} | model: ${model} | max_tokens: ${maxTokens} | temperature: ${temp} | top_p: ${topP} | seed: ${seed}`;
-                }
-            }
-
-            function rebuildTaskInterventions() {
-                const dsId = $("dataset").value;
-                const ds =
-                    DATA.datasets.find((d) => d.id === dsId) ||
-                    DATA.datasets[0];
-                const tasks = ds.tasks || [];
-                const task =
-                    tasks.find((t) =>
-                        String(t.id || "").includes(state.selectedTaskMode),
-                    ) || tasks[0];
-
-                const mode = (task?.id || "").includes("generation")
-                    ? "generation"
-                    : "classification";
-                setTaskMode(mode);
-
-                resetResults();
-                setPendingChanges(false);
-                updateUI();
-            }
-
-            function onDatasetChange() {
-                rebuildTaskInterventions();
-            }
-
-            function setStatus(ok, msg, source) {
-                const dot = $("dataDot");
-                const status = $("dataStatus");
-                const src = $("dataSource");
-                dot.classList.remove("ok", "bad");
-                dot.classList.add(ok ? "ok" : "bad");
-                status.textContent = msg;
-                src.textContent = source ? `source: ${source}` : "";
-            }
-
-            async function loadData() {
-                $("codeRepoLink").href = CODE_REPO_URL;
-
-                DATA = API_CATALOG;
-                setStatus(
-                    true,
-                    "API mode enabled",
-                    "POST /api/v1/run",
-                );
-
-                if (DATA.meta && DATA.meta.code_repo) {
-                    $("codeRepoLink").href = DATA.meta.code_repo;
-                }
-
-                // Populate dataset select
-                setSelectOptions(
-                    $("dataset"),
-                    DATA.datasets,
-                    (d) => d.id,
-                    (d) => d.name,
-                );
-
-                // Initialize task/intervention context
-                rebuildTaskInterventions();
-
-                // listeners
-                $("dataset").addEventListener("change", onDatasetChange);
-                $("conceptSearch").addEventListener("input", renderConceptList);
-                $("conceptSort").addEventListener("change", renderConceptList);
-                $("conceptList").addEventListener(
-                    "click",
-                    handleConceptSelection,
-                );
-                $("applyActivationBtn").addEventListener(
-                    "click",
-                    applyActivationIntervention,
-                );
-                $("clearActivationBtn").addEventListener("click", () =>
-                    clearActivationIntervention(true),
-                );
-                $("clearAllActivationBtn").addEventListener("click", () =>
-                    clearActivationIntervention(false),
-                );
-                $("applyWeightBtn").addEventListener(
-                    "click",
-                    applyWeightIntervention,
-                );
-                $("clearWeightBtn").addEventListener(
-                    "click",
-                    clearWeightIntervention,
-                );
-
-                $("activationOp").addEventListener(
-                    "change",
-                    updateActivationFormula,
-                );
-                $("activationValue").addEventListener(
-                    "input",
-                    updateActivationFormula,
-                );
-                $("resetInterventionsBtn").addEventListener(
-                    "click",
-                    resetInterventions,
-                );
-
-                $("runBaselineBtn").addEventListener("click", runBaseline);
-                $("runIntervenedBtn").addEventListener("click", runIntervened);
-                $("compareBtn").addEventListener("click", runCompare);
-
-                $("lockBaseline").addEventListener("change", (e) => {
-                    state.isBaselineLocked = e.target.checked;
-                    const baselineLockedEl = $("baselineLockedStatus");
-                    if (baselineLockedEl) {
-                        baselineLockedEl.textContent = state.isBaselineLocked
-                            ? "true"
-                            : "false";
-                    }
-                });
-
-                $("taskMode").addEventListener("change", (e) => {
-                    const mode = e.target.value;
-                    setTaskMode(mode);
-                    rebuildTaskInterventions();
-                });
-
-                document.querySelectorAll(".tab-btn").forEach((btn) => {
-                    btn.addEventListener("click", () => {
-                        setTaskMode(btn.dataset.tab);
-                        rebuildTaskInterventions();
-                    });
-                });
-
-                $("sendToModelBtn").addEventListener("click", runCompare);
-                $("generateBtn").addEventListener("click", runCompare);
-
-                [
-                    "decodeMaxTokens",
-                    "decodeTemperature",
-                    "decodeTopP",
-                    "decodeSeed",
-                ].forEach((id) => {
-                    $(id).addEventListener("input", updateReproducibilityInfo);
-                });
-
-                updateRecipeViews();
-                updateActivationFormula();
-            }
-
-            loadData();
-        <script type="module" src="script.js"></script>
-    </body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Capstone Project | Neuron Intervention Demo</title>
+    <meta
+      name="description"
+      content="Interactive capstone demo: neuron-level interventions in Concept Bottleneck LLMs with accuracy vs steerability tradeoffs."
+    />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Loads the backend API client (must define window.CbllmApi with postRun()) -->
+    <script src="api/client.js"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+      :root {
+        --bg: #0b0f17;
+        --card: #121a29;
+        --text: #e7eefc;
+        --muted: #a9b6d3;
+        --border: rgba(255, 255, 255, 0.1);
+        --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        --radius: 16px;
+        --danger: #ff6b6b;
+        --ok: #6ee7b7;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto,
+          Arial, sans-serif;
+        background: radial-gradient(
+            1200px 800px at 15% 10%,
+            rgba(99, 102, 241, 0.2),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 700px at 85% 20%,
+            rgba(34, 197, 94, 0.14),
+            transparent 55%
+          ),
+          var(--bg);
+        color: var(--text);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+
+      header {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        margin: 0;
+        letter-spacing: -0.02em;
+        font-size: clamp(30px, 4vw, 46px);
+        line-height: 1.1;
+      }
+
+      .sub {
+        margin: 0;
+        color: var(--muted);
+        max-width: 80ch;
+        font-size: 16.5px;
+        line-height: 1.55;
+      }
+
+      .section {
+        margin-top: 18px;
+      }
+
+      .card {
+        background: rgba(18, 26, 41, 0.82);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        backdrop-filter: blur(10px);
+      }
+
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+        letter-spacing: -0.01em;
+      }
+
+      .card p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      @media (max-width: 650px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      label {
+        display: block;
+        font-size: 13.5px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      select,
+      input[type="range"],
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+      }
+
+      select {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 11px 12px;
+        outline: none;
+        font-size: 15px;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      textarea {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        outline: none;
+        font-size: 15px;
+        font-family: inherit;
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .panel-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 16px;
+        align-items: start;
+      }
+
+      @media (max-width: 980px) {
+        .panel-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel-col {
+        display: grid;
+        gap: 14px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        padding: 9px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 13.5px;
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .btn.primary {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: rgba(99, 102, 241, 0.6);
+      }
+
+      .btn.ghost {
+        background: transparent;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      @media (max-width: 520px) {
+        .kpis {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .kpi {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .kpi .name {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+
+      .kpi .val {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 7px 10px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+
+      .pill b {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", monospace;
+      }
+
+      /* Status line for backend/API connectivity */
+      .statusline {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.25);
+      }
+      .dot.ok {
+        background: var(--ok);
+      }
+      .dot.bad {
+        background: var(--danger);
+      }
+
+      /* (rest of your styles unchanged) */
+      /* ... you can keep everything else exactly as you had it ... */
+
+      .sankey-frame {
+        width: 100%;
+        height: 520px;
+        border: none;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .sankey-frame--tall {
+        height: 1000px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="pill">Interactive demo: <b>live backend API</b></div>
+
+        <h1>Concept Bottleneck LLM Intervention Console</h1>
+        <p class="sub">
+          Edit concept-linked neurons, run baseline vs intervened, and inspect
+          evidence. This UI is a researcher-focused shell over live CB-LLM backend
+          responses.
+        </p>
+      </header>
+
+      <!-- EVERYTHING IN BODY UNCHANGED FROM YOUR ORIGINAL -->
+      <!-- I am keeping your entire HTML structure the same -->
+      <!-- (Your control panel, inputs, results, sankey iframe, etc.) -->
+
+      <!-- ... [snip: keep your body content exactly as you pasted] ... -->
+
+    </div>
+
+    <!-- ✅ FIX #1: Close this script properly -->
+    <script>
+      // Set your code repo link here.
+      const CODE_REPO_URL = "https://github.com/neil-dandekar/capstone";
+
+      const API_CATALOG = {
+        meta: { code_repo: CODE_REPO_URL, model_checkpoint: null },
+        datasets: [
+          {
+            id: "sst2",
+            name: "SST-2",
+            tasks: [
+              { id: "classification", name: "Classification", interventions: [{}] },
+              { id: "generation", name: "Generation", interventions: [{}] }
+            ],
+          },
+          {
+            id: "SetFit/sst2",
+            name: "SetFit/sst2",
+            tasks: [
+              { id: "classification", name: "Classification", interventions: [{}] },
+              { id: "generation", name: "Generation", interventions: [{}] }
+            ],
+          },
+          {
+            id: "ag_news",
+            name: "AG News",
+            tasks: [
+              { id: "classification", name: "Classification", interventions: [{}] },
+              { id: "generation", name: "Generation", interventions: [{}] }
+            ],
+          },
+          {
+            id: "yelp_polarity",
+            name: "Yelp Polarity",
+            tasks: [
+              { id: "classification", name: "Classification", interventions: [{}] },
+              { id: "generation", name: "Generation", interventions: [{}] }
+            ],
+          },
+          {
+            id: "dbpedia_14",
+            name: "DBPedia 14",
+            tasks: [
+              { id: "classification", name: "Classification", interventions: [{}] },
+              { id: "generation", name: "Generation", interventions: [{}] }
+            ],
+          },
+        ],
+      };
+
+      let DATA = null;
+      const state = {
+        selectedTaskMode: "classification",
+        selectedDataset: "",
+        currentInput: "",
+        baselineResult: null,
+        intervenedResult: null,
+        concepts: [],
+        interventions: { activation: {}, weights: {} },
+        isBaselineLocked: false,
+        pendingChanges: false,
+        lastRunConfig: null,
+        selectedConceptIds: [],
+        lastSelectedConceptIndex: null,
+        isRunning: false,
+        lastApiResponse: null,
+      };
+
+      function $(id) { return document.getElementById(id); }
+
+      /* KEEP ALL YOUR JS EXACTLY AS YOU PASTED IT */
+      /* ... paste the rest of your functions here unchanged ... */
+
+      async function loadData() {
+        $("codeRepoLink").href = CODE_REPO_URL;
+
+        DATA = API_CATALOG;
+        setStatus(true, "API mode enabled", "POST /api/v1/run");
+
+        if (DATA.meta && DATA.meta.code_repo) {
+          $("codeRepoLink").href = DATA.meta.code_repo;
+        }
+
+        setSelectOptions($("dataset"), DATA.datasets, (d) => d.id, (d) => d.name);
+        rebuildTaskInterventions();
+
+        $("dataset").addEventListener("change", onDatasetChange);
+        $("conceptSearch").addEventListener("input", renderConceptList);
+        $("conceptSort").addEventListener("change", renderConceptList);
+        $("conceptList").addEventListener("click", handleConceptSelection);
+
+        $("applyActivationBtn").addEventListener("click", applyActivationIntervention);
+        $("clearActivationBtn").addEventListener("click", () => clearActivationIntervention(true));
+        $("clearAllActivationBtn").addEventListener("click", () => clearActivationIntervention(false));
+
+        $("applyWeightBtn").addEventListener("click", applyWeightIntervention);
+        $("clearWeightBtn").addEventListener("click", clearWeightIntervention);
+
+        $("activationOp").addEventListener("change", updateActivationFormula);
+        $("activationValue").addEventListener("input", updateActivationFormula);
+
+        $("resetInterventionsBtn").addEventListener("click", resetInterventions);
+
+        $("runBaselineBtn").addEventListener("click", runBaseline);
+        $("runIntervenedBtn").addEventListener("click", runIntervened);
+        $("compareBtn").addEventListener("click", runCompare);
+
+        $("lockBaseline").addEventListener("change", (e) => {
+          state.isBaselineLocked = e.target.checked;
+        });
+
+        $("taskMode").addEventListener("change", (e) => {
+          const mode = e.target.value;
+          setTaskMode(mode);
+          rebuildTaskInterventions();
+        });
+
+        $("sendToModelBtn").addEventListener("click", runCompare);
+        $("generateBtn").addEventListener("click", runCompare);
+
+        ["decodeMaxTokens", "decodeTemperature", "decodeTopP", "decodeSeed"].forEach((id) => {
+          $(id).addEventListener("input", updateReproducibilityInfo);
+        });
+
+        updateRecipeViews();
+        updateActivationFormula();
+      }
+
+      loadData();
+    </script>
+
+    <!-- ✅ FIX #2: Load your script.js as a MODULE (after the inline script) -->
+    <script type="module" src="script.js"></script>
+  </body>
 </html>
