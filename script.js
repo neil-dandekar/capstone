@@ -36,3 +36,14 @@ export async function loadConcepts() {
   return apiGet("/concepts");
 }
 // Deprecated module retained for compatibility. No mock data loading.
+async function boot() {
+  console.log("API_BASE =", API_BASE);
+  try {
+    const res = await apiGet("/health");
+    console.log("✅ backend connected:", res);
+  } catch (e) {
+    console.error("❌ backend not reachable:", e);
+  }
+}
+boot();
+
