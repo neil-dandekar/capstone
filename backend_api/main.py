@@ -29,6 +29,20 @@ DATASET_ALIASES = {
 }
 
 app = FastAPI(title="CB-LLM Backend API", version="0.2.0")
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://chguerra15.github.io",
+        "http://127.0.0.1:5500",   # optional if you ever use Live Server
+        "http://localhost:5500",   # optional
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
