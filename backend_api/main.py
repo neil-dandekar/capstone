@@ -142,7 +142,11 @@ def choose_classification_checkpoint(
     )
 
 
-def run_classification(payload: dict[str, Any], request_id: str | None) -> dict[str, Any]:
+def run_classification(
+    payload: dict[str, Any],
+    request_id: str | None,
+    intervention: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     context = payload["context"]
     response_options = payload.get("response_options") or {}
     text = payload["input"]["text"]
@@ -160,6 +164,10 @@ def run_classification(payload: dict[str, Any], request_id: str | None) -> dict[
         "--top_k_concepts",
         str(top_k),
     ]
+
+    if isinstance(intervention, dict) and intervention.get("enabled"):
+        cmd += ["--intervention_json", json.dumps(intervention)]
+
     result = run_json_command(cmd, request_id, "Classification inference")
     return {
         "output": {
@@ -187,6 +195,7 @@ def run_classification(payload: dict[str, Any], request_id: str | None) -> dict[
             "token_time": None,
         },
     }
+
 
 
 def run_generation(payload: dict[str, Any], request_id: str | None) -> dict[str, Any]:
@@ -317,10 +326,36 @@ def run_api(payload: dict[str, Any]) -> dict[str, Any]:
             request_id=request_id,
         )
 
-    if payload.get("intervention") is not None:
-        warnings.append("Intervention payload received but currently ignored.")
+    intervention = payload.get("intervention")
+    intervention_enabled = bool(isinstance(intervention, dict) and intervention.get("enabled"))
 
-    inference_result = run_classification(payload, request_id)
+    # Run according to run_mode
+    if run_mode == "baseline":
+        baseline = run_classification(payload, request_id, intervention=None)
+        intervened = None
+        intervention_applied = False
+
+    elif run_mode == "intervened":
+        if not intervention_enabled:
+            warnings.append(
+                "run_mode=intervened but intervention.enabled is false; running without intervention."
+            )
+        baseline = None
+        intervened = run_classification(
+            payload,
+            request_id,
+            intervention=intervention if intervention_enabled else None,
+        )
+        intervention_applied = intervention_enabled
+
+    else:  # compare
+        baseline = run_classification(payload, request_id, intervention=None)
+        intervened = run_classification(
+            payload,
+            request_id,
+            intervention=intervention if intervention_enabled else None,
+        )
+        intervention_applied = intervention_enabled
 
     elapsed_ms = int((time.perf_counter() - started) * 1000)
     response: dict[str, Any] = {
@@ -334,22 +369,14 @@ def run_api(payload: dict[str, Any]) -> dict[str, Any]:
             "task_id": payload["context"]["task_id"],
             "model_id": payload["context"].get("model_id"),
             "model_checkpoint": payload["context"].get("model_checkpoint"),
-            "intervention_applied": False,
+            "intervention_applied": intervention_applied,
         },
         "warnings": warnings,
     }
 
-    if run_mode == "baseline":
-        response["baseline"] = inference_result
-    elif run_mode == "intervened":
-        response["intervened"] = inference_result
-    else:
-        response["baseline"] = inference_result
-        response["intervened"] = copy.deepcopy(inference_result)
-        warnings.append("run_mode=compare returned identical results because intervention is disabled.")
+    if baseline is not None:
+        response["baseline"] = baseline
+    if intervened is not None:
+        response["intervened"] = intervened
 
     return response
-
-
-if __name__ == "__main__":
-    uvicorn.run("backend_api.main:app", host="0.0.0.0", port=int(os.getenv("PORT", "5500")))
