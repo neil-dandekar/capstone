@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Neuron → Token Sankey</title>
+        <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+        <style>
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+                background: white;
+            }
+
+            #sankey {
+                width: 100%;
+                height: 100%;
+                min-height: 980px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="sankey" aria-label="Neuron to token flow diagram"></div>
+        <script>
+            const leftLabels = [
+                "Neuron: world",
+                "Neuron: sports",
+                "Neuron: business",
+                "Neuron: technology",
+            ];
+
+            const wordBlocks = [
+                [
+                    "Egypt",
+                    "Israel",
+                    "Army",
+                    "Islamic",
+                    "Margaret",
+                    "raid",
+                    "Afghan",
+                    "working",
+                    "military",
+                    "election",
+                ],
+                [
+                    "team",
+                    "Game",
+                    "playoff",
+                    "teams",
+                    "defending",
+                    "coach",
+                    "unbe",
+                    "race",
+                    "star",
+                    "NBA",
+                ],
+                [
+                    "$",
+                    "US",
+                    "share",
+                    "trading",
+                    "industry",
+                    "demand",
+                    "data",
+                    "outlook",
+                    "shares",
+                    "Market",
+                ],
+                [
+                    "Internet",
+                    "Web",
+                    "PC",
+                    "new",
+                    "Software",
+                    "marketing",
+                    "design",
+                    "CEO",
+                    "Apple",
+                ],
+            ];
+
+            const palette = [
+                "#1f77b4",
+                "#ff7f0e",
+                "#2ca02c",
+                "#d62728",
+                "#9467bd",
+                "#8c564b",
+                "#e377c2",
+                "#7f7f7f",
+                "#bcbd22",
+                "#17becf",
+            ];
+
+            function hexToRgba(hex, alpha) {
+                const value = hex.replace("#", "");
+                const r = parseInt(value.substring(0, 2), 16);
+                const g = parseInt(value.substring(2, 4), 16);
+                const b = parseInt(value.substring(4, 6), 16);
+                return `rgba(${r},${g},${b},${alpha})`;
+            }
+
+            const labels = [
+                ...leftLabels,
+                ...wordBlocks.flat(),
+            ];
+
+            const leftColor = "#22d3ee";
+            const leftColors = Array(leftLabels.length).fill(leftColor);
+            const rightColors = wordBlocks.flatMap(() => palette);
+            const nodeColors = [...leftColors, ...rightColors];
+
+            const leftX = 0.05;
+            const rightX = 0.95;
+            const blockHeight = 0.18;
+            const gap = 0.06;
+            const startY = 0.05;
+
+            const leftYs = leftLabels.map((_, blockIndex) => {
+                const blockTop = startY + blockIndex * (blockHeight + gap);
+                return blockTop + blockHeight / 2;
+            });
+
+            const rightYs = wordBlocks.flatMap((block, blockIndex) => {
+                const blockTop = startY + blockIndex * (blockHeight + gap);
+                return block.map((_, i) => {
+                    const step = blockHeight / (block.length - 1);
+                    return blockTop + i * step;
+                });
+            });
+
+            const nodeX = [
+                ...Array(leftLabels.length).fill(leftX),
+                ...Array(wordBlocks.flat().length).fill(rightX),
+            ];
+
+            const nodeY = [...leftYs, ...rightYs];
+
+            const sources = [];
+            const targets = [];
+            const values = [];
+            const linkColors = [];
+
+            wordBlocks.forEach((block, blockIndex) => {
+                block.forEach((_, wordIndex) => {
+                    const sourceIndex = blockIndex;
+                    const targetIndex = leftLabels.length + blockIndex * 10 + wordIndex;
+                    sources.push(sourceIndex);
+                    targets.push(targetIndex);
+                    values.push(1);
+                    linkColors.push(hexToRgba(palette[wordIndex], 0.6));
+                });
+            });
+
+            Plotly.newPlot(
+                "sankey",
+                [
+                    {
+                        type: "sankey",
+                        arrangement: "fixed",
+                        node: {
+                            pad: 18,
+                            thickness: 16,
+                            line: { color: "rgba(0,0,0,0)", width: 0 },
+                            label: labels,
+                            color: nodeColors,
+                            x: nodeX,
+                            y: nodeY,
+                        },
+                        link: {
+                            source: sources,
+                            target: targets,
+                            value: values,
+                            color: linkColors,
+                        },
+                    },
+                ],
+                {
+                    margin: { l: 180, r: 40, t: 24, b: 24 },
+                    paper_bgcolor: "white",
+                    plot_bgcolor: "white",
+                    font: { size: 15, color: "#111827" },
+                    height: 1000,
+                },
+                { displayModeBar: false, responsive: true },
+            );
+        </script>
+    </body>
+</html>

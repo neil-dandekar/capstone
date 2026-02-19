@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Concept → Class Sankey</title>
+        <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+        <style>
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+                background: white;
+            }
+
+            #sankey {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="sankey" aria-label="Concept to class flow diagram"></div>
+        <script>
+            const labels = [
+                "Unattractive store layout.",
+                "Poor customer service.",
+                "Rude staff.",
+                "Dirty dining area.",
+                "Overbooked reservations.",
+                "Welcoming and friendly staff.",
+                "Clean and inviting ambiance.",
+                "Great warranty and support.",
+                "Amazing flavors.",
+                "Well-maintained facility.",
+                "negative",
+                "positive",
+            ];
+
+            const leftColors = [
+                "#22d3ee", // teal / cyan
+                "#f97316", // orange
+                "#22c55e", // green
+                "#ef4444", // red
+                "#a855f7", // purple
+                "#8b5a2b", // brown
+                "#9ca3af", // gray
+                "#a3e635", // yellow-green
+                "#14b8a6", // turquoise
+                "#1d4ed8", // dark blue
+            ];
+
+            const nodeColors = [
+                ...leftColors,
+                "#1e3a8a", // negative (dark blue)
+                "#db2777", // positive (magenta)
+            ];
+
+            const leftX = 0.08;
+            const rightX = 0.85;
+            const leftY = [
+                0.06, // Unattractive store layout
+                0.15, // Poor customer service
+                0.24, // Rude staff
+                0.33, // Dirty dining area
+                0.42, // Overbooked reservations
+                0.60, // Welcoming and friendly staff
+                0.69, // Clean and inviting ambiance
+                0.78, // Great warranty and support
+                0.87, // Amazing flavors
+                0.96, // Well-maintained facility
+            ];
+
+            const nodeX = [
+                ...Array(10).fill(leftX),
+                rightX,
+                rightX,
+            ];
+
+            const nodeY = [
+                ...leftY,
+                0.22, // negative center (top block)
+                0.78, // positive center (bottom block)
+            ];
+
+            const sources = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            const targets = [10, 10, 10, 10, 10, 11, 11, 11, 11, 11];
+            const values = [
+                20, // Unattractive store layout (thickest)
+                15, // Poor customer service
+                15, // Rude staff
+                8,  // Dirty dining area
+                8,  // Overbooked reservations
+                14, // Welcoming and friendly staff
+                20, // Clean and inviting ambiance (thickest)
+                12, // Great warranty and support
+                12, // Amazing flavors
+                7,  // Well-maintained facility (thinnest)
+            ];
+
+            const negLinkColor = "rgba(147,197,253,0.65)"; // light blue
+            const posLinkColor = "rgba(253,164,175,0.65)"; // light pink
+            const linkColors = [
+                negLinkColor,
+                negLinkColor,
+                negLinkColor,
+                negLinkColor,
+                negLinkColor,
+                posLinkColor,
+                posLinkColor,
+                posLinkColor,
+                posLinkColor,
+                posLinkColor,
+            ];
+
+            Plotly.newPlot(
+                "sankey",
+                [
+                    {
+                        type: "sankey",
+                        arrangement: "fixed",
+                        node: {
+                            pad: 18,
+                            thickness: 16,
+                            line: { color: "rgba(0,0,0,0)", width: 0 },
+                            label: labels,
+                            color: nodeColors,
+                            x: nodeX,
+                            y: nodeY,
+                        },
+                        link: {
+                            source: sources,
+                            target: targets,
+                            value: values,
+                            color: linkColors,
+                        },
+                    },
+                ],
+                {
+                    margin: { l: 200, r: 28, t: 24, b: 24 },
+                    paper_bgcolor: "white",
+                    plot_bgcolor: "white",
+                    font: { size: 16, color: "#111827" },
+                },
+                { displayModeBar: false, responsive: true },
+            );
+        </script>
+    </body>
+</html>
