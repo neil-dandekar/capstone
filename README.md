@@ -1,4 +1,4 @@
-# Reproducing and Extending Concept Bottleneck Large Language Models for Faithful Interpretability
+# Opening the Bottleneck: Steering LLMs via Concept Intervention
 
 **Neil Dandekar & Christian Guerra**
 
