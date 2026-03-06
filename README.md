@@ -2,170 +2,212 @@
 
 **Neil Dandekar & Christian Guerra** · UCSD DSC 180B Capstone · Advised by Lily Weng
 
-> **Project Website:** [neil-dandekar.github.io/capstone-site](https://neil-dandekar.github.io/capstone-site/) &nbsp;|&nbsp; **Report:** [Q2Report_Checkpoint-3.pdf](./Q2Report_Checkpoint-3.pdf) &nbsp;|&nbsp; **Original Paper:** [CB-LLMs (ICLR 2025)](https://arxiv.org/abs/2412.07992)
+> **Project Website:** [chguerra15.github.io/capstone-site](https://chguerra15.github.io/capstone-site/) &nbsp;|&nbsp; **Report:** [Q2Report_Checkpoint-3.pdf](./Q2Report_Checkpoint-3.pdf) &nbsp;|&nbsp; **Original Paper:** [CB-LLMs (ICLR 2025)](https://arxiv.org/abs/2412.07992)
 
 ---
 
-## What We Built
+## Problem Description
 
-This project reproduces and extends the [Concept Bottleneck Large Language Models (CB-LLMs)](https://arxiv.org/abs/2412.07992) framework. Our contributions on top of the original authors' work are:
+Large language models (LLMs) are powerful but opaque — their predictions depend on thousands of hidden features that are not meaningful to humans, making it hard to understand, audit, or correct their behavior.
 
-1. **Multi-neuron intervention analysis** — we go beyond the original paper's single-neuron edits to study how suppressing or amplifying *groups* of concept neurons jointly affects model predictions.
-2. **Interactive Concept Manipulation GUI** — a Python-based interface where users can load a CB-LLM checkpoint, view concept activations for any input text, and adjust neuron values via sliders to observe real-time prediction changes.
-3. **Reproduced benchmarks** — we replicate Tables 2 and 5 from the original paper across four datasets (SST2, YelpP, AG News, DBpedia), using the authors' finetuned checkpoints from HuggingFace.
-4. **Sankey visualizations** — concept contribution diagrams showing how learned concept weights flow toward downstream predictions.
+**Concept Bottleneck Large Language Models (CB-LLMs)** address this by inserting a human-interpretable "concept layer" between the transformer backbone and the final classifier. Each neuron in this layer represents a semantic concept (e.g., sentiment, sports, toxicity), allowing users to inspect and directly manipulate what drives a prediction.
 
----
-
-## CB-LLM: Classification
-
-<p align="center">
-  <img src="./fig/cbllm.png" width="80%" />
-</p>
-
-The classification pipeline transforms a pretrained language model into an interpretable CB-LLM by inserting a **Concept Bottleneck Layer (CBL)** between the encoder and the prediction head. Each neuron in the CBL represents a human-interpretable concept (e.g., sentiment, topic, formality), and a sparse linear classifier uses these concept activations to make the final prediction.
+This project reproduces key results from the CB-LLM paper (ICLR 2025) and extends the framework with:
+- **Multi-neuron intervention analysis** — coordinated suppression/amplification of concept neuron groups
+- **An interactive GUI** — real-time concept manipulation without model retraining
+- **Sankey visualizations** — concept weight contribution diagrams across four datasets
 
 ---
 
-## CB-LLM: Generation
-
-<p align="center">
-  <img src="./fig/cbllm_generation.png" width="80%" />
-</p>
-
-The generation pipeline extends CB-LLMs to autoregressive text generation using Llama3 with LoRA finetuning. Concept neurons can be steered at inference time to guide the style and content of generated text without retraining.
-
----
-
-## Our Interactive GUI
-
-<p align="center">
-  <img src="./fig/GUI.png" width="55%" />
-</p>
-
-We built an interactive concept manipulation interface that:
-- Loads a trained CB-LLM checkpoint
-- Displays concept activations for any user-provided input sentence
-- Lets users adjust individual neuron values via sliders
-- Updates prediction probabilities in real time — no retraining required
-
-The GUI is implemented in Python and connects slider-based controls to the model's internal concept layer via PyTorch forward hooks.
-
----
-
-## Multi-Neuron Intervention
-
-<p align="center">
-  <img src="./fig/multi_neuron_intervention.png" width="80%" />
-</p>
-
-A key extension beyond the original CB-LLM paper is our **multi-neuron intervention** setup. Rather than modifying one concept at a time, we apply a diagonal scaling matrix to suppress or amplify multiple neurons simultaneously:
-
-$$A' = D_\alpha A$$
-
-This lets us study how groups of concepts interact and jointly influence predictions — revealing effects that single-neuron edits miss.
-
----
-
-## Concept Contribution Visualization
-
-<p align="center">
-  <img src="./fig/sankeygraph.png" width="80%" />
-</p>
-
-We use Sankey diagrams to visualize how concept weights flow from individual neurons toward downstream class predictions. For AG News, one neuron consistently exhibited strong influence toward the Sports category, suggesting the bottleneck captures interpretable semantic structure rather than arbitrary features.
-
-<p align="center">
-  <img src="./fig/sport_weights.png" width="50%" />
-</p>
-
----
-
-## Repository Structure
+## Directory Structure
 
 ```
 capstone/
-├── backend_api/          # API layer connecting the GUI to the CB-LLM model
-├── classification/       # CB-LLM classification pipeline (from original authors, extended)
-├── generation/           # CB-LLM generation pipeline (from original authors)
-├── codex/                # Experiment scripts and analysis notebooks
-├── frontend/             # Interactive GUI for concept manipulation
+├── backend_api/          # Flask API connecting the GUI to the CB-LLM model
+│   └── app.py            # Main API entrypoint
+├── classification/       # CB-LLM text classification pipeline
+│   ├── get_concept_labels.py           # Generate concept scores via ACS
+│   ├── train_CBL.py                    # Train the Concept Bottleneck Layer
+│   ├── train_FL.py                     # Train the sparse linear classifier
+│   ├── test_CBLLM.py                   # Evaluate CB-LLM accuracy
+│   ├── print_concept_contributions.py  # Generate per-sample explanations
+│   ├── finetune_black_box.py           # Train black-box baseline
+│   └── requirements.txt
+├── generation/           # CB-LLM text generation pipeline
+│   ├── train_CBLLM.py          # Finetune Llama3 with CBL
+│   ├── test_steerability.py    # Evaluate steerability
+│   ├── test_perplexity.py      # Evaluate perplexity
+│   ├── test_generation.py      # Generate text with concept intervention
+│   ├── test_weight.py          # Extract top concept-token weights for Sankey
+│   └── requirements.txt
+├── frontend/             # Interactive concept manipulation GUI
+│   └── app.py            # Slider-based neuron editor, runs locally
+├── codex/                # Additional experiment scripts and analysis
 ├── fig/                  # Figures used in the report and README
-├── checkpoint.ipynb      # Self-contained Q1 reproduction notebook (no setup needed)
+├── checkpoint.ipynb      # Self-contained Q1 reproduction notebook
 └── README.md
 ```
 
 ---
 
-## Quickstart
-
-### Reproduce Our Q1 Results (No Setup Required)
-
-Open and run `checkpoint.ipynb` — it installs all dependencies automatically and reproduces the key tables from the paper.
-
-### Run the Full Pipeline
+## Environment Setup
 
 **Requirements:** CUDA 12.1, Python 3.10, PyTorch 2.2
 
-**Classification:**
+It is strongly recommended to use a conda virtual environment:
+
+```bash
+conda create -n cbllm python=3.10
+conda activate cbllm
+conda install pytorch==2.2.0 torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+```
+
+---
+
+## Installation
+
+### Classification Pipeline
+
 ```bash
 cd classification
 pip install -r requirements.txt
+```
 
-# Download finetuned checkpoints (skips training)
+**Key dependencies:** `transformers>=4.38`, `datasets`, `setfit`, `scikit-learn`, `sentence-transformers`, `tqdm`, `numpy`, `torch==2.2.0`
+
+### Generation Pipeline
+
+```bash
+cd generation
+pip install -r requirements.txt
+```
+
+**Key dependencies:** `transformers>=4.38`, `peft`, `trl`, `accelerate`, `datasets`, `bitsandbytes`, `torch==2.2.0`
+
+### Frontend GUI
+
+```bash
+cd frontend
+pip install -r requirements.txt
+```
+
+---
+
+## Dataset Access
+
+All datasets load automatically via HuggingFace `datasets` — no manual download required. They are cached locally under `~/.cache/huggingface/datasets/` after first run.
+
+| Dataset | HuggingFace ID | Task |
+|---|---|---|
+| SST-2 | `SetFit/sst2` | Sentiment (binary) |
+| Yelp Polarity | `yelp_polarity` | Sentiment (binary) |
+| AG News | `ag_news` | Topic (4-class) |
+| DBpedia | `dbpedia_14` | Topic (14-class) |
+
+---
+
+## Quickstart: Reproduce Results (No Setup Required)
+
+For Q1 reproduction, open and run `checkpoint.ipynb` — it installs all dependencies automatically and reproduces the key benchmark tables using pretrained checkpoints from HuggingFace.
+
+---
+
+## Running Experiments
+
+### Step 1 — Download Pretrained Checkpoints
+
+Skip training entirely using the authors' finetuned checkpoints:
+
+**Classification:**
+```bash
 git lfs install
 git clone https://huggingface.co/cesun/cbllm-classification temp_repo
-mv temp_repo/mpnet_acs .
+mv temp_repo/mpnet_acs classification/
 rm -rf temp_repo
 ```
 
 **Generation:**
 ```bash
-cd generation
-pip install -r requirements.txt
-
 git lfs install
 git clone https://huggingface.co/cesun/cbllm-generation temp_repo
-mv temp_repo/from_pretained_llama3_lora_cbm .
+mv temp_repo/from_pretained_llama3_lora_cbm generation/
 rm -rf temp_repo
 ```
 
-### Run the GUI
+### Step 2 — Evaluate Classification Accuracy
 
 ```bash
-cd frontend
-pip install -r requirements.txt
-python app.py
+cd classification
+python test_CBLLM.py --cbl_path mpnet_acs/SetFit_sst2/roberta_cbm/cbl_acc.pt --sparse
 ```
+
+**Expected output:** Per-class and overall test accuracy printed to stdout (~0.96 on SST2). Use `--dataset ag_news`, `--dataset yelp_polarity`, or `--dataset dbpedia_14` to switch datasets.
+
+### Step 3 — Generate Concept Contribution Explanations
+
+```bash
+cd classification
+python print_concept_contributions.py --cbl_path mpnet_acs/SetFit_sst2/roberta_cbm/cbl_acc.pt
+```
+
+**Expected output:** 5 concept-based explanations per sample printed to stdout, showing which concepts drove each prediction.
+
+### Step 4 — Visualize Concept Weights (Sankey Diagram)
+
+```bash
+cd generation
+python test_weight.py --dataset ag_news
+```
+
+**Expected output:** `[concept] [token] [weight]` triples printed to stdout. Paste into [SankeyMATIC](https://sankeymatic.com/build/) to generate the flow diagram.
+
+### Step 5 — Evaluate Steerability and Perplexity
+
+```bash
+cd generation
+python test_steerability.py
+python test_perplexity.py
+```
+
+**Expected output:** Steerability score (0–1) and perplexity value printed per dataset. Reference values from our reproduction:
+
+| Method | Metric | SST2 | YelpP | AGNews | DBpedia |
+|---|---|---|---|---|---|
+| CB-LLM (ours) | Accuracy↑ | 0.9638 | 0.9855 | 0.9439 | 0.9924 |
+| | Steerability↑ | 0.82 | 0.95 | 0.85 | 0.76 |
+| | Perplexity↓ | 116.22 | 13.03 | 18.25 | 37.59 |
+| CB-LLM w/o ADV | Accuracy↑ | 0.9676 | 0.9830 | 0.9418 | 0.9934 |
+| | Steerability↑ | 0.57 | 0.69 | 0.52 | 0.21 |
+| Llama3 (black-box) | Accuracy↑ | 0.9692 | 0.9851 | 0.9493 | 0.9919 |
+| | Steerability↑ | No | No | No | No |
+
+### Step 6 — Run Concept Interventions
+
+```bash
+cd generation
+python test_generation.py --dataset ag_news
+```
+
+Edit line 48 of `test_generation.py` to set the neuron activation value you want to intervene on.
+
+**Expected output:** Generated sentences whose topic shifts based on which concept neuron you modified. For example, zeroing the Sports neuron on a sports headline drops predicted Sports probability from 0.89 → 0.48; doubling it raises it to 0.94.
 
 ---
 
-## Key Results
+## Running the GUI
 
-### Classification Accuracy (reproduced)
+```bash
+cd frontend
+python app.py
+```
 
-| Method | SST2 | YelpP | AGNews | DBpedia |
-|---|---|---|---|---|
-| CB-LLM (ours, w/ ADV training) | 0.9638 | 0.9855 | 0.9439 | 0.9924 |
-| CB-LLM w/o ADV training | 0.9676 | 0.9830 | 0.9418 | 0.9934 |
-| Llama3 finetuned (black-box) | 0.9692 | 0.9851 | 0.9493 | 0.9919 |
+Open the URL shown in the terminal. The interface lets you:
+1. Enter any input sentence
+2. View the model's concept activations
+3. Adjust individual neuron values with sliders
+4. See prediction probabilities update in real time
 
-### Steerability (CB-LLM with ADV training vs. black-box)
-
-| Dataset | CB-LLM (ours) | CB-LLM w/o ADV | Llama3 (black-box) |
-|---|---|---|---|
-| SST2 | **0.82** | 0.57 | ✗ |
-| YelpP | **0.95** | 0.69 | ✗ |
-| AGNews | **0.85** | 0.52 | ✗ |
-| DBpedia | **0.76** | 0.21 | ✗ |
-
-### Sports Neuron Intervention (AG News)
-
-| Condition | Accuracy on Sports | Mean p(Sports) |
-|---|---|---|
-| No intervention | 0.94 | 0.89 |
-| Sports neuron → 0 | 0.61 | 0.48 |
-| Sports neuron × 2 | 0.97 | 0.94 |
+No model retraining is required — the GUI applies scalar multipliers to neuron activations before the classifier head computes logits.
 
 ---
 
@@ -174,14 +216,12 @@ python app.py
 | Person | Role |
 |---|---|
 | **Neil Dandekar** | Backend experimentation, CB-LLM reproduction, intervention logic, model evaluation |
-| **Christian Guerra** | Frontend/GUI development, Sankey visualizations, project website deployment |
+| **Christian Guerra** | Frontend/GUI development, Sankey visualization integration, project website deployment |
 | **Lily Weng** | Research advising, methodology guidance, project direction |
 
 ---
 
 ## Citation
-
-This project builds on:
 
 ```bibtex
 @article{cbllm,
