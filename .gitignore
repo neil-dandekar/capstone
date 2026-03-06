@@ -1,71 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model checkpoints (downloaded separately via HuggingFace)
+mpnet_acs/
+from_pretained_llama3_lora_cbm/
+baseline_models/
+*.pt
+*.bin
+*.safetensors
+*.ckpt
+
+# HuggingFace cache
+~/.cache/huggingface/
+
+# Data (loaded automatically via HuggingFace datasets)
+data/raw/
+data/cache/
+*.csv
+*.tsv
+*.json
+*.jsonl
+
+# Results / outputs (generated at runtime)
+results/
+outputs/
+logs/
+*.log
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Python bytecode / caches
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.pytest_cache/
-.mypy_cache/
-.pyre/
-.ruff_cache/
-.hypothesis/
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Packaging / build
-build/
-dist/
-*.egg-info/
-.eggs/
-pip-wheel-metadata/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Coverage / test output
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
-
-# Logs / local runtime files
-*.log
-*.pid
-*.out
-*.err
-
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Local secrets / config
-.env
-.env.*
-*.local
-
-# ML model checkpoints / weights
-*.pt
-*.pth
-*.ckpt
-*.bin
-*.safetensors
-**/*_epoch_*/
-
-# Project-specific generated checkpoint folders
-classification/mpnet_acs/
-generation/from_pretained_llama3_lora_cbm/
-
-# Local data/artifacts (uncomment if needed)
-# data/
-# outputs/
-# artifacts/
-# wandb/
-# mlruns/
+# Temp files
+temp_repo/
+tmp/
+*.tmp
