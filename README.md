@@ -1,306 +1,189 @@
 # Opening the Bottleneck: Steering LLMs via Concept Intervention
 
-**Neil Dandekar & Christian Guerra**
+**Neil Dandekar & Christian Guerra** · UCSD DSC 180B Capstone · Advised by Lily Weng
 
-This repository contains an implementation of a full-stack interface for users to perturb concept-neurons to increase accuracy and steerability of LLMs for text classification and generation tasks. Our project is largely based on the work of Chung-En Sun, Tuomas Oikarinen, Berk Ustun, and Tsui-Wei Weng. "_Concept Bottleneck Large Language Models_". ICLR, 2025. Scroll down to "Concept Bottleneck Large Language Models" for more information on the original authors' work. Our code is a fork of their repository and the full-stack interface is on its way.
+> **Project Website:** [neil-dandekar.github.io/capstone-site](https://neil-dandekar.github.io/capstone-site/) &nbsp;|&nbsp; **Report:** [Q2Report_Checkpoint-3.pdf](./Q2Report_Checkpoint-3.pdf) &nbsp;|&nbsp; **Original Paper:** [CB-LLMs (ICLR 2025)](https://arxiv.org/abs/2412.07992)
 
-```
-@article{cbllm,
-   title={Concept Bottleneck Large Language Models},
-   author={Sun, Chung-En and Oikarinen, Tuomas and Ustun, Berk and Weng, Tsui-Wei},
-   journal={ICLR},
-   year={2025}
-}
-```
+---
 
-## Setup
+## What We Built
 
-Our code for Quarter 1 is self-contained in [checkpoint.ipynb](/checkpoint.ipynb), which requires no setup. Run all code and it will create the environments, install all dependencies, and reproduce each table from the paper. We used the finetuned model checkpoints provided by the authors on HuggingFace to replicate Tables 2 and 5 in the paper. To set up the repository, read the README.md provided by the authors below:
+This project reproduces and extends the [Concept Bottleneck Large Language Models (CB-LLMs)](https://arxiv.org/abs/2412.07992) framework. Our contributions on top of the original authors' work are:
 
-[Scroll](#main)
+1. **Multi-neuron intervention analysis** — we go beyond the original paper's single-neuron edits to study how suppressing or amplifying *groups* of concept neurons jointly affects model predictions.
+2. **Interactive Concept Manipulation GUI** — a Python-based interface where users can load a CB-LLM checkpoint, view concept activations for any input text, and adjust neuron values via sliders to observe real-time prediction changes.
+3. **Reproduced benchmarks** — we replicate Tables 2 and 5 from the original paper across four datasets (SST2, YelpP, AG News, DBpedia), using the authors' finetuned checkpoints from HuggingFace.
+4. **Sankey visualizations** — concept contribution diagrams showing how learned concept weights flow toward downstream predictions.
 
+---
 
-**Disclaimer:** My partner and I changed our capstone project this week (week 6). So far, we've done literature review and cloned/set up the code from the authors: [repo](https://github.com/Trustworthy-ML-Lab/CB-LLMs), [paper](https://arxiv.org/abs/2412.07992), and [[project website](https://lilywenglab.github.io/CB-LLMs/)].
-
-
-<a id="main"></a>
-# Concept Bottleneck Large Language Models
-
-01/22 update: CB-LLMs is accepted by ICLR2025!
-
-This is the official repo for the paper: [**Concept Bottleneck Large Language Models**](https://arxiv.org/abs/2412.07992) [[project website](https://lilywenglab.github.io/CB-LLMs/)].
-
--   In this work, we proposed **Concept Bottleneck Large Language Model (CB-LLM)**, the first framework for building _inherently interpretable_ Large Language Models (LLMs) that works on both text generation and text classification tasks. CB-LLM extends and generalizes our earlier research, [**Crafting Large Language Models for Enhanced Interpretability**](https://arxiv.org/abs/2407.04307) for text classification tasks, offering both interpretability and controllability in text generation.
--   This repo contains two parts:
-    -   **CB-LLM (classification):** Transforming pre-trained LLMs into interpretable LLMs for text classification
-    -   **CB-LLM (generation):** Transforming pre-trained LLMs into interpretable LLMs for text generation
-
-## Part I: CB-LLM (classification)
+## CB-LLM: Classification
 
 <p align="center">
   <img src="./fig/cbllm.png" width="80%" />
 </p>
 
-### Setup
+The classification pipeline transforms a pretrained language model into an interpretable CB-LLM by inserting a **Concept Bottleneck Layer (CBL)** between the encoder and the prediction head. Each neuron in the CBL represents a human-interpretable concept (e.g., sentiment, topic, formality), and a sparse linear classifier uses these concept activations to make the final prediction.
 
-Recommend using cuda12.1, python3.10, pytorch2.2.
-Go into the folder for classification case:
+---
+
+## CB-LLM: Generation
+
+<p align="center">
+  <img src="./fig/cbllm_generation.png" width="80%" />
+</p>
+
+The generation pipeline extends CB-LLMs to autoregressive text generation using Llama3 with LoRA finetuning. Concept neurons can be steered at inference time to guide the style and content of generated text without retraining.
+
+---
+
+## Our Interactive GUI
+
+<p align="center">
+  <img src="./fig/GUI.png" width="55%" />
+</p>
+
+We built an interactive concept manipulation interface that:
+- Loads a trained CB-LLM checkpoint
+- Displays concept activations for any user-provided input sentence
+- Lets users adjust individual neuron values via sliders
+- Updates prediction probabilities in real time — no retraining required
+
+The GUI is implemented in Python and connects slider-based controls to the model's internal concept layer via PyTorch forward hooks.
+
+---
+
+## Multi-Neuron Intervention
+
+<p align="center">
+  <img src="./fig/multi_neuron_intervention.png" width="80%" />
+</p>
+
+A key extension beyond the original CB-LLM paper is our **multi-neuron intervention** setup. Rather than modifying one concept at a time, we apply a diagonal scaling matrix to suppress or amplify multiple neurons simultaneously:
+
+$$A' = D_\alpha A$$
+
+This lets us study how groups of concepts interact and jointly influence predictions — revealing effects that single-neuron edits miss.
+
+---
+
+## Concept Contribution Visualization
+
+<p align="center">
+  <img src="./fig/sankeygraph.png" width="80%" />
+</p>
+
+We use Sankey diagrams to visualize how concept weights flow from individual neurons toward downstream class predictions. For AG News, one neuron consistently exhibited strong influence toward the Sports category, suggesting the bottleneck captures interpretable semantic structure rather than arbitrary features.
+
+<p align="center">
+  <img src="./fig/sport_weights.png" width="50%" />
+</p>
+
+---
+
+## Repository Structure
 
 ```
+capstone/
+├── backend_api/          # API layer connecting the GUI to the CB-LLM model
+├── classification/       # CB-LLM classification pipeline (from original authors, extended)
+├── generation/           # CB-LLM generation pipeline (from original authors)
+├── codex/                # Experiment scripts and analysis notebooks
+├── frontend/             # Interactive GUI for concept manipulation
+├── fig/                  # Figures used in the report and README
+├── checkpoint.ipynb      # Self-contained Q1 reproduction notebook (no setup needed)
+└── README.md
+```
+
+---
+
+## Quickstart
+
+### Reproduce Our Q1 Results (No Setup Required)
+
+Open and run `checkpoint.ipynb` — it installs all dependencies automatically and reproduces the key tables from the paper.
+
+### Run the Full Pipeline
+
+**Requirements:** CUDA 12.1, Python 3.10, PyTorch 2.2
+
+**Classification:**
+```bash
 cd classification
-```
-
-Install the packages:
-
-```
 pip install -r requirements.txt
-```
 
-We also provide finetuned CB-LLMs, allowing you to skip the training process. Download the checkpoints from huggingface:
-
-```
+# Download finetuned checkpoints (skips training)
 git lfs install
 git clone https://huggingface.co/cesun/cbllm-classification temp_repo
 mv temp_repo/mpnet_acs .
 rm -rf temp_repo
 ```
 
-### Training
-
-#### Automatic Concept Scoring (ACS)
-
-To generate the concept scores by our ACS strategy, run
-
-```
-python get_concept_labels.py
-```
-
-This will generate the concept scores for the SST2 dataset using our predefined concept set, and store the scores under `mpnet_acs/SetFit_sst2/`.
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-
-#### Train CBL
-
-To train the CBL, run
-
-```
-python train_CBL.py --automatic_concept_correction
-```
-
-This will train the CBL with Automatic Concept Correction for the SST2 dataset, and store the model under `mpnet_acs/SetFit_sst2/roberta_cbm/`.
-To disable Automatic Concept Correction, remove the given argument.
-Set the argument `--backbone gpt2` to switch the backbone from roberta to gpt2.
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-
-#### Train the final predictor
-
-To train the final predictor, run
-
-```
-python train_FL.py --cbl_path mpnet_acs/SetFit_sst2/roberta_cbm/cbl_acc.pt
-```
-
-This will train the linear predictor of the CBL for the SST2 dataset, and store the linear layer in the same directory.
-Please change the argument `--cbl_path` accordingly if using other settings. For example, w/o Automatic Concept Correction will be save as `cbl.pt`.
-
-#### Train the baseline black-box model
-
-To train the baseline standard black-box model, run
-
-```
-python finetune_black_box.py
-```
-
-This will train the black-box (non-interpretable) model for the SST2 dataset, and store the model under `baseline_models/roberta/`.
-Set the argument `--backbone gpt2` to switch the backbone from roberta to gpt2.
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-
-### Testing
-
-#### Test CB-LLM (classification)
-
-To test the accuracy of the CB-LLM, run
-
-```
-python test_CBLLM.py --cbl_path mpnet_acs/SetFit_sst2/roberta_cbm/cbl_acc.pt
-```
-
-Please change the argument `--cbl_path` accordingly if using other settings. For example, w/o Automatic Concept Correction will be save as `cbl.pt`. Add the `--sparse` argument for testing with the sparse final layer.
-
-#### Generate explanations from CB-LLM
-
-To visualize the neurons in CB-LLM (task 1 in our paper), run
-
-```
-python print_concept_activations.py --cbl_path mpnet_acs/SetFit_sst2/roberta_cbm/cbl_acc.pt
-```
-
-This will generate 5 most related samples for each neuron explanation.
-Please change the argument `--cbl_path` accordingly if using other settings.
-
-To get the explanations provided by CB-LLM (task 2 in our paper), run
-
-```
-python print_concept_contributions.py --cbl_path mpnet_acs/SetFit_sst2/roberta_cbm/cbl_acc.pt
-```
-
-This will generate 5 explanations for each sample in the dataset.
-Please change the argument `--cbl_path` accordingly if using other settings.
-
-#### Test the baseline black-box model
-
-To test the accuracy of the baseline standard black-box model, run
-
-```
-python test_black_box.py --model_path baseline_models/roberta/backbone_finetuned_sst2.pt
-```
-
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-Please change the argument `--model_path` accordingly if using other settings.
-
-### Key results
-
-##### _Test accuracy of CB-LLM. CB-LLMs are competitive with the black-box model after applying ACC._
-
-| Accuracy ↑                          | SST2       | YelpP                                      | AGnews     | DBpedia                                    |
-| ----------------------------------- | ---------- | ------------------------------------------ | ---------- | ------------------------------------------ |
-| **Ours:**                           |            |                                            |            |                                            |
-| CB-LLM                              | 0.9012     | 0.9312                                     | 0.9009     | 0.9831                                     |
-| CB-LLM w/ ACC                       | **0.9407** | **<span style="color:blue">0.9806</span>** | **0.9453** | **<span style="color:blue">0.9928</span>** |
-| **Baselines:**                      |            |                                            |            |                                            |
-| TBM&C³M                             | 0.9270     | 0.9534                                     | 0.8972     | 0.9843                                     |
-| Roberta-base fine-tuned (black-box) | 0.9462     | 0.9778                                     | 0.9508     | 0.9917                                     |
-
-## Part II: CB-LLM (generation)
-
-<p align="center">
-  <img src="./fig/cbllm_generation.png" width="80%" />
-</p>
-
-### Setup
-
-Recommend using cuda12.1, python3.10, pytorch2.2.
-Go into the folder for generation case:
-
-```
+**Generation:**
+```bash
 cd generation
-```
-
-Install the packages:
-
-```
 pip install -r requirements.txt
-```
 
-We also provide finetuned CB-LLMs, allowing you to skip the training process. Download the checkpoints from huggingface:
-
-```
 git lfs install
 git clone https://huggingface.co/cesun/cbllm-generation temp_repo
 mv temp_repo/from_pretained_llama3_lora_cbm .
 rm -rf temp_repo
 ```
 
-### Training
+### Run the GUI
 
-#### Train CB-LLM (generation)
-
-To train the CB-LLM for text generation, run
-
-```
-python train_CBLLM.py
+```bash
+cd frontend
+pip install -r requirements.txt
+python app.py
 ```
 
-This will train the CB-LLM (Lora finetune Llama3 with CBL) on SST2 dataset with the class labels as concepts (negative or positive), and store the model under `from_pretained_llama3_lora_cbm/SetFit_sst2/`.
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
+---
 
-### Testing
+## Key Results
 
-#### Test the concept detection of CB-LLM (generation)
+### Classification Accuracy (reproduced)
 
-To test the concept detection (concept accuracy) of the CB-LLM, run
+| Method | SST2 | YelpP | AGNews | DBpedia |
+|---|---|---|---|---|
+| CB-LLM (ours, w/ ADV training) | 0.9638 | 0.9855 | 0.9439 | 0.9924 |
+| CB-LLM w/o ADV training | 0.9676 | 0.9830 | 0.9418 | 0.9934 |
+| Llama3 finetuned (black-box) | 0.9692 | 0.9851 | 0.9493 | 0.9919 |
 
-```
-python test_concepts.py
-```
+### Steerability (CB-LLM with ADV training vs. black-box)
 
-Please rename the desired checkpoint of the peft model and CBL as `llama3` and `cbl.pt`, as the script recognizes these file names.
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
+| Dataset | CB-LLM (ours) | CB-LLM w/o ADV | Llama3 (black-box) |
+|---|---|---|---|
+| SST2 | **0.82** | 0.57 | ✗ |
+| YelpP | **0.95** | 0.69 | ✗ |
+| AGNews | **0.85** | 0.52 | ✗ |
+| DBpedia | **0.76** | 0.21 | ✗ |
 
-#### Test the steerability of CB-LLM (generation)
+### Sports Neuron Intervention (AG News)
 
-To test the steerability (concept accuracy) of the CB-LLM, need to first train the roberta classifier (to determine whether the generated text belongs to the desired class)
+| Condition | Accuracy on Sports | Mean p(Sports) |
+|---|---|---|
+| No intervention | 0.94 | 0.89 |
+| Sports neuron → 0 | 0.61 | 0.48 |
+| Sports neuron × 2 | 0.97 | 0.94 |
 
-```
-python train_classifier.py
-```
+---
 
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-After getting the classifier corresponding to the dataset, evaluate the steerability by running
+## Contribution
 
-```
-python test_steerability.py
-```
+| Person | Role |
+|---|---|
+| **Neil Dandekar** | Backend experimentation, CB-LLM reproduction, intervention logic, model evaluation |
+| **Christian Guerra** | Frontend/GUI development, Sankey visualizations, project website deployment |
+| **Lily Weng** | Research advising, methodology guidance, project direction |
 
-Please rename the desired checkpoint of the peft model and CBL as `llama3` and `cbl.pt`, as the script recognizes these file names.
+---
 
-#### Test the perplexity of the generated sentences from CB-LLM
+## Citation
 
-To test the perplexity using Llama3-8B, run
+This project builds on:
 
-```
-python test_perplexity.py
-```
-
-Please rename the desired checkpoint of the peft model and CBL as `llama3` and `cbl.pt`, as the script recognizes these file names.
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-
-#### Visualize the top 10 tokens with the highest weight connect to a concept neuron
-
-Run
-
-```
-python test_weight.py
-```
-
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-Paste the results to [SankeyMATIC](https://sankeymatic.com/build/) to visualize the weights. For example,
-
-<p align="center">
-  <img src="./fig/sport_weights.png" width="50%" />
-</p>
-
-#### Intervene the concept neurons and generate a sentence using CB-LLM
-
-Run
-
-```
-python test_generation.py
-```
-
-By changing the activation value of the corresponding neuron in Line 48, the generation would contain the desired concepts.
-Set the argument `--dataset yelp_polarity`, `--dataset ag_news`, or `--dataset dbpedia_14` to switch the dataset.
-
-### Key results
-
-##### _The accuracy, steerability, and perplexity of CB-LLMs (generation). CB-LLMs perform well on accuracy (↑) and perplexity (↓) while providing higher steerability (↑)_
-
-| Method                           | Metric        | SST2       | YelpP      | AGnews     | DBpedia    |
-| -------------------------------- | ------------- | ---------- | ---------- | ---------- | ---------- |
-| **CB-LLM (Ours)**                | Accuracy↑     | 0.9638     | **0.9855** | 0.9439     | 0.9924     |
-|                                  | Steerability↑ | **0.82**   | **0.95**   | **0.85**   | **0.76**   |
-|                                  | Perplexity↓   | 116.22     | 13.03      | 18.25      | 37.59      |
-| **CB-LLM w/o ADV training**      | Accuracy↑     | 0.9676     | 0.9830     | 0.9418     | **0.9934** |
-|                                  | Steerability↑ | 0.57       | 0.69       | 0.52       | 0.21       |
-|                                  | Perplexity↓   | **59.19**  | 12.39      | 17.93      | **35.13**  |
-| **Llama3 finetuned (black-box)** | Accuracy↑     | **0.9692** | 0.9851     | **0.9493** | 0.9919     |
-|                                  | Steerability↑ | No         | No         | No         | No         |
-|                                  | Perplexity↓   | 84.70      | **6.62**   | **12.52**  | 41.50      |
-
-## Cite this work
-
-Chung-En Sun, Tuomas Oikarinen, Berk Ustun, and Tsui-Wei Weng. "_Concept Bottleneck Large Language Models_". ICLR, 2025
-
-```
+```bibtex
 @article{cbllm,
    title={Concept Bottleneck Large Language Models},
    author={Sun, Chung-En and Oikarinen, Tuomas and Ustun, Berk and Weng, Tsui-Wei},
@@ -308,3 +191,5 @@ Chung-En Sun, Tuomas Oikarinen, Berk Ustun, and Tsui-Wei Weng. "_Concept Bottlen
    year={2025}
 }
 ```
+
+Original authors' repository: [Trustworthy-ML-Lab/CB-LLMs](https://github.com/Trustworthy-ML-Lab/CB-LLMs)
